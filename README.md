@@ -4,7 +4,7 @@
 <h1 align="center">ProjectEF Neo</h1>
 <p align="center">
   <b>Equivalent Exchange: Reborn for Fabric</b><br>
-  中文名：[Fabric]等价交换Neo<br>
+  中文名：[Fabric]等价交换 Neo<br>
   Minecraft 1.21.1 · Fabric
 </p>
 <p align="center">
@@ -41,7 +41,7 @@ Existing ProjectE configuration files, resource paths, datapacks, and world data
 | Component    | Version               |
 | ------------ | --------------------- |
 | Minecraft    | 1.21.1                |
-| ProjectEF Neo | 1.2.3                |
+| ProjectEF Neo | 1.3.0               |
 | Mod Loader   | Fabric Loader 0.16.9+ |
 | Fabric API   | 0.116.14+1.21.1       |
 | Java         | 21                    |
