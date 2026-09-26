@@ -4,6 +4,7 @@ import com.google.common.base.Predicates;
 import java.util.function.Predicate;
 import moze_intel.projecte.PECore;
 import moze_intel.projecte.gameObjs.items.ItemPE;
+import moze_intel.projecte.gameObjs.registries.PEAttachmentTypes;
 import moze_intel.projecte.gameObjs.registries.PEItems;
 import moze_intel.projecte.utils.PlayerHelper;
 import net.minecraft.core.Holder;
@@ -14,6 +15,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.material.FluidState;
@@ -81,7 +83,8 @@ public class InternalAbilities {
 	}
 
 	/**
-	 * Replaces NeoForge CREATIVE_FLIGHT attribute management with direct mayfly control.
+	 * Replaces NeoForge CREATIVE_FLIGHT attribute management with direct mayfly control. As other mods (for example Avaritia's infinity armor) also directly grant
+	 * mayfly, we keep track of whether we are the ones that granted it, and only ever revoke flight that we granted.
 	 * Only sends an update packet when the ability actually changes.
 	 */
 	private static void updateFlight(Player player) {
@@ -89,13 +92,20 @@ public class InternalAbilities {
 		if (player.isCreative() || player.isSpectator()) {
 			return;
 		}
-		boolean shouldFly = shouldPlayerFly(player);
-		if (shouldFly != player.getAbilities().mayfly) {
-			player.getAbilities().mayfly = shouldFly;
-			if (!shouldFly) {
-				player.getAbilities().flying = false;
+		Abilities abilities = player.getAbilities();
+		if (shouldPlayerFly(player)) {
+			if (!abilities.mayfly) {
+				abilities.mayfly = true;
+				player.setAttached(PEAttachmentTypes.GRANTED_FLIGHT, true);
+				player.onUpdateAbilities();
 			}
-			player.onUpdateAbilities();
+		} else if (player.hasAttached(PEAttachmentTypes.GRANTED_FLIGHT)) {
+			player.removeAttached(PEAttachmentTypes.GRANTED_FLIGHT);
+			if (abilities.mayfly) {
+				abilities.mayfly = false;
+				abilities.flying = false;
+				player.onUpdateAbilities();
+			}
 		}
 	}
 

@@ -35,6 +35,13 @@ public class PEAttachmentTypes {
 			.buildAndRegister(PECore.rl("gem_armor_state"));
 
 	/**
+	 * Only attached while ProjectEF is the one that granted the player flight. Persistent as vanilla also persists {@link net.minecraft.world.entity.player.Abilities#mayfly}.
+	 */
+	public static final AttachmentType<Boolean> GRANTED_FLIGHT = AttachmentRegistry.<Boolean>builder()
+			.persistent(Codec.BOOL)
+			.buildAndRegister(PECore.rl("granted_flight"));
+
+	/**
 	 * Ensures the attachment types are registered. Attachment registration happens in the static initializers above, this method just provides an explicit trigger
 	 * point during mod construction.
 	 */
