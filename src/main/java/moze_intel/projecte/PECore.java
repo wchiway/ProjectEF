@@ -343,9 +343,13 @@ public class PECore implements ModInitializer {
 				emcUpdateResourceManager = null;
 			}
 		}
-		//Always sync EMC data to the player, regardless of connection type
-		PENetwork.sendToPlayer(player, SyncEmcPKT.serializeEmcData(player.registryAccess()), FuelMapper.getSyncPacket());
-		PENetwork.sendToPlayer(player, WorldTransmutationManager.getSyncPacket());
+		//The host of an integrated server shares the EMC, fuel and world transmutation data with the server, so don't sync it to them.
+		// Memory connections still encode packets, so syncing would replace the shared EMC map with a copy decoded against the client's registries,
+		// which the server then fails to encode for any LAN player that joins (dynamic registry holders such as armor trims don't match)
+		if (!player.connection.connection.isMemoryConnection()) {
+			PENetwork.sendToPlayer(player, SyncEmcPKT.serializeEmcData(player.registryAccess()), FuelMapper.getSyncPacket());
+			PENetwork.sendToPlayer(player, WorldTransmutationManager.getSyncPacket());
+		}
 	}
 
 	private void registerCommands(com.mojang.brigadier.CommandDispatcher<net.minecraft.commands.CommandSourceStack> dispatcher, CommandBuildContext context,
