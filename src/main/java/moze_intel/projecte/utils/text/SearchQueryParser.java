@@ -22,6 +22,8 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Advanced pattern searching, in use by QIO Item Viewers. Only use on client-side.
+ * <p>
+ * Name and tooltip queries additionally match Chinese text by pinyin, see {@link PinyinMatcher}.
  *
  * @author aidancbrady
  * @implNote <a href="https://github.com/mekanism/Mekanism/blob/1.21.x/src/main/java/mekanism/common/content/qio/SearchQueryParser.java">From Mekanism</a> MIT licensed
@@ -194,7 +196,8 @@ public class SearchQueryParser {
 		NAME('~') {
 			@Override
 			public boolean matches(@Nullable Level level, @Nullable Player player, String key, ItemStack stack) {
-				return stack.getHoverName().getString().toLowerCase(Locale.ROOT).contains(key);
+				String name = stack.getHoverName().getString().toLowerCase(Locale.ROOT);
+				return name.contains(key) || PinyinMatcher.contains(name, key);
 			}
 		},
 		MOD_ID('@') {
@@ -214,7 +217,7 @@ public class SearchQueryParser {
 			public boolean matches(@Nullable Level level, @Nullable Player player, String key, ItemStack stack) {
 				for (Component tooltipLine : stack.getTooltipLines(Item.TooltipContext.of(level), player, Default.NORMAL)) {
 					String tooltip = tooltipLine.getString().toLowerCase(Locale.ROOT);
-					if (tooltip.contains(key)) {
+					if (tooltip.contains(key) || PinyinMatcher.contains(tooltip, key)) {
 						return true;
 					}
 				}

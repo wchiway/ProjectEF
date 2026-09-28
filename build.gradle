@@ -168,6 +168,7 @@ repositories { RepositoryHandler handler ->
     exclusiveRepo(handler, 'https://raw.githubusercontent.com/Fuzss/modresources/main/maven/', filter -> {
         filter.includeGroupAndSubgroups('fuzs.forgeconfigapiport')
     })
+    exclusiveRepo(handler, 'https://jitpack.io', 'com.github.Towdium')//PinIn
 }
 
 dependencies {
@@ -188,6 +189,8 @@ dependencies {
     include(modImplementation("me.lucko:fabric-permissions-api:${permissions_api_version}"))
     //Math library used by the EMC solver; nested jar instead of shading (Fabric loads nested libraries fine)
     include(implementation("org.apache.commons:commons-math3:3.6.1"))
+    //Pinyin matching for the transmutation table search; nested jar (same artifact JECh nests, so Fabric Loader dedupes the two copies)
+    include(implementation("com.github.Towdium:PinIn:${pinin_version}"))
 
     modCompileOnly("mezz.jei:jei-${minecraft_version}-fabric-api:${jei_version}")
     if (recipe_viewer == 'jei' || recipe_viewer == 'hybrid') {
