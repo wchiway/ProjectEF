@@ -1,6 +1,7 @@
 package moze_intel.projecte.integration;
 
 import moze_intel.projecte.api.item_handlers.IItemHandler;
+import moze_intel.projecte.integration.avaritia.AvaritiaIntegration;
 import moze_intel.projecte.integration.trinkets.TrinketsIntegration;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.world.entity.player.Player;
@@ -20,9 +21,12 @@ public class IntegrationHelper {
 	 * Called during common mod init to hook up any loaded optional integrations.
 	 * <p>
 	 * The trinkets accessories are registered per-item via {@link #registerCuriosCapability(Item)} during item
-	 * registration, so there is nothing extra to wire up here.
+	 * registration. Avaritia's additional recipes are supplied by an automatically enabled data pack.
 	 */
 	public static void init() {
+		if (FabricLoader.getInstance().isModLoaded(AvaritiaIntegration.MODID)) {
+			AvaritiaIntegration.registerRecipePack();
+		}
 	}
 
 	/**

@@ -1,0 +1,12 @@
+{
+  "type": "avaritia:compressor",
+  "result": {
+    "id": "avaritia:red_matter_singularity"
+  },
+  "cost": 200,
+  "ingredients": [
+    {
+      "item": "projecte:red_matter_block"
+    }
+  ]
+}

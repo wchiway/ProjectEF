@@ -78,6 +78,7 @@ Accessory slots are provided through [Trinkets](https://modrinth.com/mod/trinket
 ### Compatibility & Localization
 
 * Built-in EMC values for classic Avaritia items.
+* AvaritiaNeo Fabric: automatically enables Dark Matter and Red Matter Singularities, with compressor recipes consuming 200 corresponding ProjectE matter blocks. Item Alchemy is not required.
 * Full Simplified Chinese and English localization.
 * Compatible with original ProjectE configuration format and mod ID (`projecte`).
 
