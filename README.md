@@ -23,6 +23,10 @@
 
 </p>
 
+## Quick Links
+
+[Download on CurseForge](https://www.curseforge.com/minecraft/mc-mods/projectef) · [GitHub Releases](https://github.com/wchiway/ProjectEF/releases) · [Installation](#installation) · [Report an Issue](https://github.com/wchiway/ProjectEF/issues) · [Developer Guide](DEV.md)
+
 ## Overview
 
 **ProjectEF Neo** is a modern Fabric port of the classic **ProjectE** mod — the complete **Equivalent Exchange** experience on Minecraft 1.21.1.
@@ -35,17 +39,6 @@ The **"F"** stands for **Fabric**. ProjectEF Neo keeps the classic **EMC (Energy
 * Progress from the Philosopher's Stone to Dark Matter / Red Matter tools and GEM armor.
 
 Existing ProjectE configuration files, resource paths, datapacks, and world data remain compatible wherever possible.
-
-## Project Status
-
-| Component    | Version               |
-| ------------ | --------------------- |
-| Minecraft    | 1.21.1                |
-| ProjectEF Neo | 1.3.0               |
-| Mod Loader   | Fabric Loader 0.16.9+ |
-| Fabric API   | 0.116.14+1.21.1       |
-| Java         | 21                    |
-| Build System | Fabric Loom 1.10.5    |
 
 ## Features
 
@@ -97,7 +90,7 @@ Accessory slots are provided through [Trinkets](https://modrinth.com/mod/trinket
 
 1. Install Minecraft 1.21.1 with Fabric Loader.
 2. Install a compatible Fabric API version.
-3. Download the latest ProjectEF Neo release.
+3. Download ProjectEF Neo from [CurseForge](https://www.curseforge.com/minecraft/mc-mods/projectef) or [GitHub Releases](https://github.com/wchiway/ProjectEF/releases).
 4. Place the JAR file into your Minecraft `mods` folder.
 
 ### Optional Integrations
@@ -107,50 +100,6 @@ These mods only enhance the experience and are never required:
 * JEI / EMI / REI — recipe viewers
 * Jade / WTHIT — block information overlays
 * Trinkets — accessory slots
-
-## Building from Source
-
-Clone the repository:
-
-```bash
-git clone https://github.com/wchiway/ProjectEF.git
-
-cd ProjectEF
-```
-
-Build the project:
-
-```bash
-./gradlew build
-```
-
-Windows:
-
-```bat
-gradlew.bat build
-```
-
-Build output:
-
-```
-build/libs/
-```
-
-Run the Fabric development client:
-
-```bash
-./gradlew runClient
-```
-
-The development recipe viewer defaults to JEI. The `recipe_viewer` property accepts
-`jei`, `emi`, `rei`, `hybrid`, or `none`.
-
-To use EMI or REI:
-
-```bash
-./gradlew runClient -Precipe_viewer=emi
-./gradlew runClient -Precipe_viewer=rei
-```
 
 ## Compatibility Notes
 
@@ -174,7 +123,7 @@ The following integrations from the NeoForge version are not included:
 
 ## Reporting Issues
 
-When reporting a bug, please include:
+Please [open an issue](https://github.com/wchiway/ProjectEF/issues) and include:
 
 * ProjectEF Neo version
 * Minecraft version
@@ -185,7 +134,11 @@ When reporting a bug, please include:
 
 Please attach logs as files or external paste links instead of posting complete logs directly in the issue.
 
-## Developer
+## Development
+
+For source builds, the development client, and recipe viewer selection, see the [Developer Guide](DEV.md).
+
+## Maintainer
 
 **Chiway Wang**
 
