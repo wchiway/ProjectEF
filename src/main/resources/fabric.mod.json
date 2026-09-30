@@ -30,6 +30,9 @@
     "client": [
       "moze_intel.projecte.client.PECoreClient"
     ],
+    "jade": [
+      "moze_intel.projecte.integration.jade.PEJadePlugin"
+    ],
     "rei_client": [
       "moze_intel.projecte.integration.recipe_viewer.rei.PEReiPlugin"
     ]

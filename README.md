@@ -98,7 +98,7 @@ Accessory slots are provided through [Trinkets](https://modrinth.com/mod/trinket
 These mods only enhance the experience and are never required:
 
 * JEI / EMI / REI — recipe viewers
-* Jade / WTHIT — block information overlays
+* Jade / WTHIT — block information overlays. With Jade installed, ProjectEF Neo registers its own EMC provider through Jade's Fabric plugin entrypoint; no Jade patch is required. Blocks with an EMC value display it when looked at. Keep `misc.lookingAtDisplay` enabled in ProjectE's `server.toml` and **EMC Provider** (`projecte:emc_provider`) enabled in Jade's plugin settings.
 * Trinkets — accessory slots
 
 ## Compatibility Notes
