@@ -136,7 +136,7 @@ Please attach logs as files or external paste links instead of posting complete 
 
 ## Development
 
-For source builds, the development client, and recipe viewer selection, see the [Developer Guide](DEV.md).
+For source builds, development runs, and source-set status, see the [Developer Guide](DEV.md). Architecture notes, examples, and historical material are listed in the [documentation index](docs/README.md).
 
 ## Maintainer
 

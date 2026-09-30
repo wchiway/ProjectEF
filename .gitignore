@@ -40,18 +40,24 @@ $RECYCLE.BIN/
 # Mac crap
 .DS_Store
 
-#docs and scripts
-docs/
-scripts/
+# Local notes and tooling (shared docs/ and scripts/ are tracked)
+/docs/local/
+/docs/plans/
+/docs/superpowers/
+/scripts/local/
+# Legacy local check script; review before adding it to the supported checks
+/scripts/verify-fabric-runtime-regressions.sh
 CLAUDE.md
-FABRIC_PORT_PLAN.md
 FABRIC_PORTING_CONTRACT.md
+AGENTS.md
+.claude/
+
+# Local logs, experiments, and extracted dependencies
 *.log
-dev/
+/log/
+/dev/
 trinkets-refmap.json
 trinkets.accesswidener
 trinkets.mixins.json
 LICENSE_trinkets
 /trinkets/
-AGENTS.md
-.claude/
