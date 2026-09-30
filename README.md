@@ -70,7 +70,7 @@ Accessory slots are provided through [Trinkets](https://modrinth.com/mod/trinket
 
 ### Compatibility & Localization
 
-* Built-in EMC values for classic Avaritia items.
+* Built-in EMC values for classic Avaritia items are **disabled by default**. To opt in, set `enableAvaritiaEMC = true` at the top level of `config/ProjectE/mapping.toml`, then restart the server or reload the world. If `usePregenerated` is enabled, disable it first so EMC values are recalculated. This switch does not block custom EMC values or values derived from recipes.
 * AvaritiaNeo Fabric: automatically enables Dark Matter and Red Matter Singularities, with compressor recipes consuming 200 corresponding ProjectE matter blocks. Item Alchemy is not required.
 * Full Simplified Chinese and English localization.
 * Compatible with original ProjectE configuration format and mod ID (`projecte`).

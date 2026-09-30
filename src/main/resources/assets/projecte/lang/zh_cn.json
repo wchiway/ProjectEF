@@ -185,6 +185,8 @@
   "configuration.projecte.common.debug_logging.tooltip": "Enable more verbose debug logging.",
   "configuration.projecte.common.high_alchemists": "高炼金术士 UUID",
   "configuration.projecte.common.high_alchemists.tooltip": "加入时广播“高炼金术士”消息的玩家 UUID 列表。取代原先的远程 UUID 名单,默认留空。",
+  "configuration.projecte.mapping.avaritia_emc": "无尽贪婪 Neo 内置 EMC",
+  "configuration.projecte.mapping.avaritia_emc.tooltip": "启用无尽贪婪 Neo 物品的内置 EMC 值，默认关闭。不影响自定义 EMC 值和配方推导的值。更改后需重新映射 EMC；请关闭 usePregenerated 以重新计算缓存的值。",
   "configuration.projecte.mapping.dump_to_file": "Dump Everything To File",
   "configuration.projecte.mapping.dump_to_file.tooltip": "Want to take a look at the internals of EMC Calculation? Enable this to write all the conversions and setValue-Commands to config/ProjectE/mapping_dump.json",
   "configuration.projecte.mapping.log_exploits": "Log Known EMC Exploits",

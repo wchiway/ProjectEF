@@ -112,6 +112,9 @@ public enum PEConfigTranslations implements IConfigTranslation {
 			"Shows the EMC value of blocks when looking at them in Jade, TOP, or WTHIT."),
 
 	//EMC Mapping
+	MAPPING_AVARITIA_EMC("mapping.avaritia_emc", "Built-in Avaritia EMC",
+			"Enable built-in EMC values for Avaritia Neo items. Disabled by default. Custom EMC values and recipe-derived values are not affected. "
+			+ "Requires an EMC remap; disable usePregenerated to recalculate cached values."),
 	MAPPING_DUMP_TO_FILE("mapping.dump_to_file", "Dump Everything To File",
 			"Want to take a look at the internals of EMC Calculation? Enable this to write all the conversions and setValue-Commands to config/ProjectE/mapping_dump.json"),
 	MAPPING_PREGENERATED("mapping.pregenerated", "Pregenerate EMC",

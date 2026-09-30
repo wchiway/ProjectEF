@@ -12,6 +12,7 @@ import moze_intel.projecte.api.mapper.collector.IMappingCollector;
 import moze_intel.projecte.api.nss.NSSItem;
 import moze_intel.projecte.api.nss.NormalizedSimpleStack;
 import moze_intel.projecte.config.CustomEMCParser;
+import moze_intel.projecte.config.MappingConfig;
 import moze_intel.projecte.config.PEConfigTranslations;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -63,12 +64,14 @@ public class CustomEMCMapper implements IEMCMapper<NormalizedSimpleStack, Long> 
 	@Override
 	public void addMappings(IMappingCollector<NormalizedSimpleStack, Long> mapper, RecipeManager recipeManager,
 			RegistryAccess registryAccess, ResourceManager resourceManager) {
-		for (Map.Entry<String, Long> entry : AVARITIA_EMC.entrySet()) {
-			ResourceLocation id = ResourceLocation.parse(entry.getKey());
-			BuiltInRegistries.ITEM.getOptional(id).ifPresent(item -> {
-				PECore.debugLog("Adding built-in Avaritia EMC value for {}: {}", id, entry.getValue());
-				mapper.setValueBefore(NSSItem.createItem(item), entry.getValue());
-			});
+		if (MappingConfig.enableAvaritiaEMC()) {
+			for (Map.Entry<String, Long> entry : AVARITIA_EMC.entrySet()) {
+				ResourceLocation id = ResourceLocation.parse(entry.getKey());
+				BuiltInRegistries.ITEM.getOptional(id).ifPresent(item -> {
+					PECore.debugLog("Adding built-in Avaritia EMC value for {}: {}", id, entry.getValue());
+					mapper.setValueBefore(NSSItem.createItem(item), entry.getValue());
+				});
+			}
 		}
 		for (Iterator<Object2LongMap.Entry<NSSItem>> iterator = Object2LongSortedMaps.fastIterator(CustomEMCParser.currentEntries.entries()); iterator.hasNext(); ) {
 			Object2LongMap.Entry<NSSItem> entry = iterator.next();

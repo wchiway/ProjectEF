@@ -38,6 +38,7 @@ public class MappingConfig extends BasePEConfig {
 	public final CachedBooleanValue dumpToFile;
 	public final CachedBooleanValue usePregenerated;
 	public final CachedBooleanValue logExploits;
+	public final CachedBooleanValue enableAvaritiaEMC;
 
 	private final ModConfigSpec configSpec;
 	private final Map<String, BooleanSupplier> mappersEnabledConfig;
@@ -49,6 +50,7 @@ public class MappingConfig extends BasePEConfig {
 		dumpToFile = CachedBooleanValue.wrap(this, PEConfigTranslations.MAPPING_DUMP_TO_FILE.applyToBuilder(builder).define("dumpToFile", false));
 		usePregenerated = CachedBooleanValue.wrap(this, PEConfigTranslations.MAPPING_PREGENERATED.applyToBuilder(builder).define("usePregenerated", false));
 		logExploits = CachedBooleanValue.wrap(this, PEConfigTranslations.MAPPING_LOG_EXPLOITS.applyToBuilder(builder).define("logFoundExploits", true));
+		enableAvaritiaEMC = CachedBooleanValue.wrap(this, PEConfigTranslations.MAPPING_AVARITIA_EMC.applyToBuilder(builder).define("enableAvaritiaEMC", false));
 
 		PEConfigTranslations.MAPPING_MAPPERS.applyToBuilder(builder).push("mappers");
 		mappersEnabledConfig = new HashMap<>(mappers.size());
@@ -85,6 +87,10 @@ public class MappingConfig extends BasePEConfig {
 
 	public static boolean logExploits() {
 		return INSTANCE == null || INSTANCE.logExploits.get();
+	}
+
+	public static boolean enableAvaritiaEMC() {
+		return INSTANCE != null && INSTANCE.enableAvaritiaEMC.get();
 	}
 
 	/**
