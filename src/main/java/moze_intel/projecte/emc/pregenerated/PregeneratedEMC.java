@@ -39,4 +39,8 @@ public class PregeneratedEMC {
 	public static void write(HolderLookup.Provider registries, Path path, Object2LongMap<ItemInfo> map) {
 		PECodecHelper.writeToFile(registries, path, CODEC, map, "pregenerated emc");
 	}
+
+	public static boolean tryWrite(HolderLookup.Provider registries, Path path, Object2LongMap<ItemInfo> map) {
+		return PECodecHelper.tryWriteToFile(registries, path, CODEC, map, "pregenerated emc");
+	}
 }

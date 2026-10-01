@@ -66,6 +66,7 @@ public class PECoreClient implements ClientModInitializer {
 		registerClientPacketReceivers();
 		registerScreens();
 		registerKeybindings();
+		EMCManagerClient.register();
 		registerOverlays();
 		registerRenderers();
 		addLayers();

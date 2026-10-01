@@ -21,6 +21,7 @@ import moze_intel.projecte.api.mapper.arithmetic.IValueArithmetic;
 import moze_intel.projecte.api.mapper.collector.IExtendedMappingCollector;
 import moze_intel.projecte.api.nss.NSSItem;
 import moze_intel.projecte.api.nss.NormalizedSimpleStack;
+import moze_intel.projecte.config.CustomEMCParser;
 import moze_intel.projecte.config.MappingConfig;
 import moze_intel.projecte.config.ProjectEConfig;
 import moze_intel.projecte.emc.arithmetic.HiddenBigFractionArithmetic;
@@ -66,6 +67,10 @@ public final class EMCMappingHandler {
 	}
 
 	public static void map(RecipeManager recipeManager, RegistryAccess registryAccess, ResourceManager resourceManager) {
+		map(recipeManager, registryAccess, resourceManager, false);
+	}
+
+	public static void map(RecipeManager recipeManager, RegistryAccess registryAccess, ResourceManager resourceManager, boolean forceRemap) {
 		//Start by clearing the cached map so if values are removed say by setting EMC to zero then we respect the change
 		clearEmcMap();
 		SimpleGraphMapper<NormalizedSimpleStack, BigFraction, IValueArithmetic<BigFraction>> mapper = new SimpleGraphMapper<>(new HiddenBigFractionArithmetic());
@@ -78,7 +83,7 @@ public final class EMCMappingHandler {
 
 		boolean usePregenerated = MappingConfig.usePregenerated();
 		Path pregeneratedEmcFile = ProjectEConfig.CONFIG_DIR.resolve("pregenerated_emc.json");
-		Optional<Object2LongMap<ItemInfo>> readPregeneratedValues = PregeneratedEMC.read(registryAccess, pregeneratedEmcFile, usePregenerated);
+		Optional<Object2LongMap<ItemInfo>> readPregeneratedValues = PregeneratedEMC.read(registryAccess, pregeneratedEmcFile, usePregenerated && !forceRemap);
 		if (readPregeneratedValues.isPresent()) {
 			int values = updateEmcValues(readPregeneratedValues.get());
 			PECore.debugLog("Loaded {} values from pregenerated EMC File", values);
@@ -93,6 +98,9 @@ public final class EMCMappingHandler {
 						emcMapper.addMappings(mappingCollector, recipeManager, registryAccess, resourceManager);
 						PECore.debugLog("Collected Mappings from " + emcMapper.getClass().getName());
 					} catch (Exception e) {
+						if (forceRemap) {
+							throw new IllegalStateException("Failed to collect EMC mappings from " + emcMapper.getName(), e);
+						}
 						PECore.LOGGER.error(LogUtils.FATAL_MARKER, "Exception during Mapping Collection from Mapper {}. PLEASE REPORT THIS! EMC VALUES MIGHT BE INCONSISTENT!",
 								emcMapper.getClass().getName(), e);
 					}
@@ -112,12 +120,21 @@ public final class EMCMappingHandler {
 
 			if (usePregenerated && emc != null) {//Note: It should never be null here as we just set it
 				//Should have used pregenerated, but the file was not read => regenerate.
-				PregeneratedEMC.write(registryAccess, pregeneratedEmcFile, emc);
+				if (forceRemap) {
+					if (!PregeneratedEMC.tryWrite(registryAccess, pregeneratedEmcFile, emc)) {
+						throw new IllegalStateException("Failed to update pregenerated EMC cache");
+					}
+				} else {
+					PregeneratedEMC.write(registryAccess, pregeneratedEmcFile, emc);
+				}
 				PECore.debugLog("Wrote Pregen-file!");
 			}
 		}
 
 		fireEmcRemapEvent();
+		if (readPregeneratedValues.isEmpty()) {
+			CustomEMCParser.markRemapped();
+		}
 	}
 
 	private static void fireEmcRemapEvent() {

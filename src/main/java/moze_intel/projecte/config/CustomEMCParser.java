@@ -39,13 +39,16 @@ public final class CustomEMCParser {
 
 	public static CustomEMCFile currentEntries;
 	private static boolean dirty = false;
+	private static boolean needsRemap = false;
 
 	private static CustomEMCFile createDefault() {
 		return new CustomEMCFile(new Object2LongLinkedOpenHashMap<>(), "Use the in-game commands to edit this file");
 	}
 
 	public static void init(HolderLookup.Provider registries) {
-		flush(registries);
+		if (!flushChanges(registries)) {
+			return;
+		}
 
 		if (Files.exists(CONFIG)) {
 			currentEntries = PECodecHelper.readFromFile(registries, CONFIG, CustomEMCFile.CODEC, "custom emc")
@@ -63,6 +66,7 @@ public final class CustomEMCParser {
 		long old = currentEntries.entries().put(toAdd, emc);
 		if (old == -1 || old != emc) {
 			dirty = true;
+			needsRemap = true;
 		}
 	}
 
@@ -70,14 +74,53 @@ public final class CustomEMCParser {
 		boolean removed = currentEntries.entries().removeLong(toRemove) != -1;
 		if (removed) {
 			dirty = true;
+			needsRemap = true;
 		}
 		return removed;
 	}
 
 	public static void flush(HolderLookup.Provider registries) {
+		flushChanges(registries);
+	}
+
+	public static boolean flushChanges(HolderLookup.Provider registries) {
 		if (dirty) {
-			PECodecHelper.writeToFile(registries, CONFIG, CustomEMCFile.CODEC, currentEntries, "custom EMC");
+			if (!PECodecHelper.tryWriteToFile(registries, CONFIG, CustomEMCFile.CODEC, currentEntries, "custom EMC")) {
+				return false;
+			}
 			dirty = false;
 		}
+		return true;
+	}
+
+	/** Saves one exact override; -1 removes it. A failed write leaves the previous state intact. */
+	public static boolean saveChange(HolderLookup.Provider registries, NSSItem item, long value) {
+		long previous = currentEntries.entries().getLong(item);
+		boolean wasDirty = dirty;
+		boolean wasPending = needsRemap;
+		if (value == -1) {
+			removeFromFile(item);
+		} else {
+			addToFile(item, value);
+		}
+		if (flushChanges(registries)) {
+			return true;
+		}
+		if (previous == -1) {
+			currentEntries.entries().removeLong(item);
+		} else {
+			currentEntries.entries().put(item, previous);
+		}
+		dirty = wasDirty;
+		needsRemap = wasPending;
+		return false;
+	}
+
+	public static boolean needsRemap() {
+		return needsRemap;
+	}
+
+	public static void markRemapped() {
+		needsRemap = false;
 	}
 }

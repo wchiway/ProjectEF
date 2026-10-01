@@ -46,7 +46,9 @@ Existing ProjectE configuration files, resource paths, datapacks, and world data
 
 * Item ↔ EMC conversion with permanent item knowledge.
 * Transmutation Table and portable Transmutation Tablet.
-* Configurable custom EMC values (`custom_emc.json` / in-game commands).
+* Configurable custom EMC values (`custom_emc.json`, in-game EMC Manager, or commands).
+* Press **F8** (rebindable in Controls) or use **EMC Manager** in the pause menu. Search by item name/ID or select your held item's base type, then save, remove, or reset its EMC. Click **Apply** to recalculate and synchronize all saved changes without `/reload`.
+* Editing requires the corresponding ProjectE `set_emc`, `remove_emc`, or `reset_emc` command permission (OP level 2 by default); applying requires all three. Remove saves a zero override; Reset removes the base-item override. Tags and component-specific variants are not edited by this screen.
 
 ### EMC Generation & Automation
 

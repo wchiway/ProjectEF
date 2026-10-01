@@ -30,6 +30,7 @@ public class PELangProvider extends BaseLanguageProvider {
 		addCommands();
 		addConfigs();
 		addEMC();
+		addEMCManager();
 		addEntityTypes();
 		addTags();
 		addItems();
@@ -167,6 +168,48 @@ public class PELangProvider extends BaseLanguageProvider {
 		add(PEBlocks.MOBIUS_FUEL, "Mobius Fuel Block");
 		add(PEBlocks.AETERNALIS_FUEL, "Aeternalis Fuel Block");
 		add(PEBlocks.DARK_MATTER_PEDESTAL, "Dark Matter Pedestal");
+	}
+
+	private void addEMCManager() {
+		add("key.projecte.emc_manager", "Open EMC Manager");
+		add("gui.projecte.emc_manager.title", "EMC Manager");
+		add("gui.projecte.emc_manager.held", "Held item");
+		add("gui.projecte.emc_manager.search", "Search name / item ID");
+		add("gui.projecte.emc_manager.value", "New EMC (positive integer)");
+		add("gui.projecte.emc_manager.save", "Save EMC");
+		add("gui.projecte.emc_manager.remove", "Remove");
+		add("gui.projecte.emc_manager.reset", "Reset");
+		add("gui.projecte.emc_manager.apply", "Apply");
+		add("gui.projecte.emc_manager.base_only", "Edits base items, not tags, enchantments or other component variants.");
+		add("gui.projecte.emc_manager.current", "Current EMC: %s");
+		add("gui.projecte.emc_manager.override", "Custom value: %s");
+		add("gui.projecte.emc_manager.default", "Default (no override)");
+		add("gui.projecte.emc_manager.remove_help", "Save a zero override to disable EMC for this base item after applying.");
+		add("gui.projecte.emc_manager.reset_help", "Remove this base item's override and let the mappers recalculate it. Tag and component overrides are unchanged.");
+		add("gui.projecte.emc_manager.apply_help", "Apply all saved changes, recalculate and synchronize EMC server-wide (may briefly pause the server). Requires set, remove and reset permissions.");
+		add("gui.projecte.emc_manager.confirm_remove", "Set the base EMC of %s to zero? Applying disables its EMC and may affect related recipes and learned knowledge.");
+		add("gui.projecte.emc_manager.confirm_reset", "Remove the base item override for %s? Applying will recalculate it from the remaining configuration and recipes.");
+		add("gui.projecte.emc_manager.confirm_close", "Close the manager? Unsaved input will be lost. Saved changes are retained, but pending changes still need Apply to take effect.");
+		add("gui.projecte.emc_manager.waiting", "Waiting for the server...");
+		add("gui.projecte.emc_manager.applying", "Recalculating server EMC, please wait...");
+		add("gui.projecte.emc_manager.pending", "Changes saved, not yet applied. Click Apply when editing is complete.");
+		add("gui.projecte.emc_manager.timeout", "Server response timed out. Select the item again to check its state before retrying an edit.");
+		add("gui.projecte.emc_manager.too_small", "Reduce GUI scale or enlarge the game window.");
+		add("gui.projecte.emc_manager.page", "%1$s / %2$s");
+		add("gui.projecte.emc_manager.no_results", "No matching items");
+		add("gui.projecte.emc_manager.unsupported", "This server does not support the EMC Manager. Update ProjectEF on the server.");
+		add("gui.projecte.emc_manager.status.ready", "Select an item to edit. Save, then click Apply.");
+		add("gui.projecte.emc_manager.status.saved", "Custom EMC saved.");
+		add("gui.projecte.emc_manager.status.applied", "EMC recalculated and synchronized to all players.");
+		add("gui.projecte.emc_manager.status.no_permission", "Missing ProjectE EMC management permission (OP level 2 by default).");
+		add("gui.projecte.emc_manager.status.invalid_item", "Invalid item: air and unregistered items cannot be edited.");
+		add("gui.projecte.emc_manager.status.invalid_value", "Enter an integer from 1 to 9223372036854775807. Use Remove to disable EMC.");
+		add("gui.projecte.emc_manager.status.conflict", "Another administrator changed this item. Its latest value is now shown; review it before saving again.");
+		add("gui.projecte.emc_manager.status.save_failed", "Save failed; the change was not written. Check server file permissions and logs.");
+		add("gui.projecte.emc_manager.status.remap_failed", "Recalculation failed; the previous EMC map was restored. Check server logs before retrying.");
+		add("gui.projecte.emc_manager.status.cooldown", "Too many requests. Wait before retrying; server-wide recalculations are at least 5 seconds apart.");
+		add("gui.projecte.emc_manager.status.not_ready", "Server EMC data is not ready. Try again shortly.");
+		add("gui.projecte.emc_manager.status.mapper_disabled", "The server has disabled the custom EMC mapper; changes cannot be applied.");
 	}
 
 	private void addCommands() {

@@ -10,6 +10,7 @@ import moze_intel.projecte.gameObjs.container.TransmutationContainer;
 import moze_intel.projecte.gameObjs.items.rings.ArchangelSmite;
 import moze_intel.projecte.gameObjs.registries.PEItems;
 import moze_intel.projecte.network.packets.IPEPacket;
+import moze_intel.projecte.network.packets.to_client.EMCManagerResponsePKT;
 import moze_intel.projecte.network.packets.to_client.NovaExplosionSyncPKT;
 import moze_intel.projecte.network.packets.to_client.SyncEmcPKT;
 import moze_intel.projecte.network.packets.to_client.SyncFuelMapperPKT;
@@ -23,6 +24,7 @@ import moze_intel.projecte.network.packets.to_client.knowledge.KnowledgeSyncChan
 import moze_intel.projecte.network.packets.to_client.knowledge.KnowledgeSyncEmcPKT;
 import moze_intel.projecte.network.packets.to_client.knowledge.KnowledgeSyncInputsAndLocksPKT;
 import moze_intel.projecte.network.packets.to_client.knowledge.KnowledgeSyncPKT;
+import moze_intel.projecte.network.packets.to_server.EMCManagerRequestPKT;
 import moze_intel.projecte.network.packets.to_server.KeyPressPKT;
 import moze_intel.projecte.network.packets.to_server.SearchUpdatePKT;
 import moze_intel.projecte.network.packets.to_server.UpdateGemModePKT;
@@ -65,6 +67,7 @@ public final class PacketHandler {
 	}
 
 	private void registerClientToServer(PacketRegistrar registrar) {
+		registrar.play(EMCManagerRequestPKT.TYPE, EMCManagerRequestPKT.STREAM_CODEC);
 		registrar.play(KeyPressPKT.TYPE, KeyPressPKT.STREAM_CODEC);
 		activateArchangel = registrar.playInstanced(PECore.rl("activate_archangel"), (ignored, context) -> {
 			Player player = context.player();
@@ -78,6 +81,7 @@ public final class PacketHandler {
 	}
 
 	private void registerServerToClient(PacketRegistrar registrar) {
+		registrar.play(EMCManagerResponsePKT.TYPE, EMCManagerResponsePKT.STREAM_CODEC);
 		resetCooldown = registrar.playInstanced(PECore.rl("reset_cooldown"), (ignored, context) -> context.player().resetAttackStrengthTicker());
 		clearKnowledge = registrar.playInstanced(PECore.rl("clear_knowledge"), (ignored, context) -> {
 			Player player = context.player();

@@ -19,8 +19,10 @@ import java.io.Reader;
 import java.io.Writer;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -163,15 +165,38 @@ public class PECodecHelper implements IPECodecHelper {
 	}
 
 	public static <TYPE> void writeToFile(HolderLookup.Provider registries, Path path, Codec<TYPE> codec, TYPE value, String fileDescription) {
-		DataResult<JsonElement> result = codec.encodeStart(registries.createSerializationContext(JsonOps.INSTANCE), value);
-		if (result.isError()) {
-			PECore.LOGGER.error("Failed to convert {} to json: {}", fileDescription, result.error().orElseThrow().message());
-			return;
-		}
-		try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
-			PRETTY_GSON.toJson(result.getOrThrow(), writer);
-		} catch (IOException e) {
+		tryWriteToFile(registries, path, codec, value, fileDescription);
+	}
+
+	public static <TYPE> boolean tryWriteToFile(HolderLookup.Provider registries, Path path, Codec<TYPE> codec, TYPE value, String fileDescription) {
+		Path temporary = null;
+		try {
+			DataResult<JsonElement> result = codec.encodeStart(registries.createSerializationContext(JsonOps.INSTANCE), value);
+			if (result.isError()) {
+				PECore.LOGGER.error("Failed to convert {} to json: {}", fileDescription, result.error().orElseThrow().message());
+				return false;
+			}
+			temporary = Files.createTempFile(path.toAbsolutePath().getParent(), path.getFileName().toString(), ".tmp");
+			try (Writer writer = Files.newBufferedWriter(temporary, StandardCharsets.UTF_8)) {
+				PRETTY_GSON.toJson(result.getOrThrow(), writer);
+			}
+			try {
+				Files.move(temporary, path, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+			} catch (AtomicMoveNotSupportedException e) {
+				Files.move(temporary, path, StandardCopyOption.REPLACE_EXISTING);
+			}
+			return true;
+		} catch (IOException | RuntimeException e) {
 			PECore.LOGGER.error("Failed to write {} file: {}", fileDescription, path, e);
+			return false;
+		} finally {
+			if (temporary != null) {
+				try {
+					Files.deleteIfExists(temporary);
+				} catch (IOException e) {
+					PECore.LOGGER.warn("Failed to remove temporary file {}", temporary, e);
+				}
+			}
 		}
 	}
 
