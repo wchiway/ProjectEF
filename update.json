@@ -1,15 +1,16 @@
 {
     "homepage": "https://www.curseforge.com/minecraft/mc-mods/projectef",
-    "latest": "1.2.3",
+    "latest": "1.3.2",
     "1.21.1": {
         "1.1.0": "See https://www.curseforge.com/minecraft/mc-mods/projectef/files for detailed information.",
         "1.2.0": "See https://www.curseforge.com/minecraft/mc-mods/projectef/files for detailed information.",
         "1.2.1": "See https://www.curseforge.com/minecraft/mc-mods/projectef/files for detailed information.",
         "1.2.2": "See https://www.curseforge.com/minecraft/mc-mods/projectef/files for detailed information.",
-        "1.2.3": "See https://www.curseforge.com/minecraft/mc-mods/projectef/files for detailed information."
+        "1.2.3": "See https://www.curseforge.com/minecraft/mc-mods/projectef/files for detailed information.",
+        "1.3.2": "Added an in-game EMC Manager with F8 and pause-menu access, server-side permissions, persistent overrides and server-wide recalculation. Fixed manager text rendering and Jade EMC display. Built-in Avaritia EMC values are now disabled by default."
     },
     "promos": {
-        "1.21.1-latest": "1.2.3",
-        "1.21.1-recommended": "1.2.3"
+        "1.21.1-latest": "1.3.2",
+        "1.21.1-recommended": "1.3.2"
     }
 }

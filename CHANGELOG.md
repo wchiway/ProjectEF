@@ -2,6 +2,24 @@
 
 All notable changes to ProjectEF Neo are documented here.
 
+## [1.3.2] - 2026-10-02
+
+### Added
+
+- In-game EMC Manager, opened with F8 (rebindable) or from the pause menu. Search base items by name or registry ID, select the held item's base type, and save, remove, or reset custom EMC values without commands.
+- Server-side permission checks, conflicting-edit detection, safe persistence, and an Apply button to recalculate and synchronize saved EMC changes across the server, including when pregenerated values are enabled.
+- Simplified Chinese and English manager translations, plus rendering-order and translation consistency checks.
+
+### Fixed
+
+- EMC Manager titles, values, and status text being covered by a second background render pass. Small windows now show a scaling hint instead of overlapping controls.
+- Jade EMC display by registering the Fabric plugin entrypoint.
+
+### Changed
+
+- Built-in EMC values for classic Avaritia items are disabled by default. Custom overrides and recipe-derived values remain unaffected.
+- Updated release and update-check metadata to 1.3.2.
+
 ## [1.2.3] - 2026-08-10
 
 ### Fixed
