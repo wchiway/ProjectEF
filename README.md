@@ -6,9 +6,9 @@ It is designed for **Minecraft 26.3** with **Fabric**. The goal is to make EMC u
 
 ## Current version
 
-**1.2.10-fabric.26.3**
+**1.2.11-fabric.26.3**
 
-[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.10-fabric.26.3.jar?raw=true)
+[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.11-fabric.26.3.jar?raw=true)
 
 Install Fabric Loader and Fabric API for Minecraft 26.3. Close Minecraft, remove
 any previous ProjectEF JAR, and place the downloaded JAR in `mods/`. Install the
@@ -26,6 +26,7 @@ same ProjectEF version on clients and servers. Java 25 is required.
 - Energy Condenser
 - Dark Matter Furnace
 - Red Matter Furnace
+- Dark Matter Pedestal
 - Custom ProjectE-style items, including the Black Hole Band
 
 ## Classic rings
@@ -34,6 +35,14 @@ Hold a ring and press **G** to toggle its aura. On the Ring of Arcana, **C**
 cycles frost, ignition, wind, and harvest. **V** raises charge, **Shift+V**
 lowers it, and **R** releases the charged ability. The ProjectE keybinds are
 configurable, and each ring's tooltip lists its mouse controls.
+
+### Dark Matter Pedestal
+
+Craft it with five Dark Matter Blocks and four Red Matter. Right-click the
+pedestal with the Harvest Goddess Band to mount it. Empty both hands and
+right-click to toggle it, or sneak-right-click to take the band back. An active
+pedestal grows and harvests crops in a 9×9×9 area while its chunk is ticking.
+Harvested items drop onto the ground.
 
 ## EMC shop
 

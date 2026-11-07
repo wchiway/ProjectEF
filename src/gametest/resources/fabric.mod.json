@@ -10,7 +10,8 @@
       "moze_intel.projecte.MachineLearningTests",
       "moze_intel.projecte.SwiftwolfRingTests",
       "moze_intel.projecte.EvertideAmuletTests",
-      "moze_intel.projecte.ClassicRingTests"
+      "moze_intel.projecte.ClassicRingTests",
+      "moze_intel.projecte.DarkMatterPedestalTests"
     ]
   }
 }

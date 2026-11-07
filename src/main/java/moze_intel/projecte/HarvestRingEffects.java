@@ -1,6 +1,7 @@
 package moze_intel.projecte;
 
 import java.util.HashSet;
+import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -34,10 +35,22 @@ final class HarvestRingEffects {
     private HarvestRingEffects() { }
 
     static void tend(ServerLevel level, Player player, ItemStack ring, int radius, Work work) {
-        BlockPos center = player.blockPosition();
+        tend(level, player, player.blockPosition(), radius, 2, work,
+                pos -> ClassicRingItem.canChange(level, player, ring, pos));
+    }
+
+    static void tendFromPedestal(ServerLevel level, Player actor, ItemStack ring, BlockPos center) {
+        int radius = 4;
+        tend(level, actor, center, radius, radius, Work.HARVEST,
+                pos -> Math.abs(pos.getY() - center.getY()) <= radius
+                        && ClassicRingItem.canChange(level, actor, ring, pos));
+    }
+
+    private static void tend(ServerLevel level, Player player, BlockPos center, int radius, int height, Work work,
+                             Predicate<BlockPos> canChange) {
         var spreadThisPulse = new HashSet<BlockPos>();
-        for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, -2, -radius), center.offset(radius, 2, radius))) {
-            if (!ClassicRingItem.canChange(level, player, ring, pos)) continue;
+        for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, -height, -radius), center.offset(radius, height, radius))) {
+            if (!canChange.test(pos)) continue;
             BlockState state = level.getBlockState(pos);
             if (state.getBlock() instanceof CropBlock crop) {
                 if (work == Work.HARVEST && crop.isMaxAge(state)) {
@@ -48,12 +61,12 @@ final class HarvestRingEffects {
                     grow(level, pos, state, crop);
                 }
             } else if (state.is(Blocks.SUGAR_CANE) || state.is(Blocks.CACTUS)) {
-                tendColumn(level, player, ring, pos, state, work);
+                tendColumn(level, player, pos, state, work, canChange);
             } else if (isSmallPlant(state) && !spreadThisPulse.contains(pos)) {
                 if (work == Work.HARVEST) level.destroyBlock(pos, true, player);
                 else if (work == Work.FERTILIZE || level.getRandom().nextInt(64) == 0) {
                     BlockPos target = pos.relative(Direction.Plane.HORIZONTAL.getRandomDirection(level.getRandom()));
-                    if (ClassicRingItem.canChange(level, player, ring, target) && level.isEmptyBlock(target)
+                    if (canChange.test(target) && level.isEmptyBlock(target)
                             && state.canSurvive(level, target) && level.setBlockAndUpdate(target, state)) {
                         spreadThisPulse.add(target);
                     }
@@ -73,8 +86,8 @@ final class HarvestRingEffects {
         }
     }
 
-    private static void tendColumn(ServerLevel level, Player player, ItemStack ring, BlockPos pos, BlockState state,
-                                   Work work) {
+    private static void tendColumn(ServerLevel level, Player player, BlockPos pos, BlockState state, Work work,
+                                   Predicate<BlockPos> canChange) {
         var plant = state.getBlock();
         if (level.getBlockState(pos.below()).is(plant)) return;
         if (work == Work.GROW && level.getRandom().nextInt(8) != 0) return;
@@ -86,12 +99,12 @@ final class HarvestRingEffects {
             int bottom = state.is(Blocks.SUGAR_CANE) ? 1 : 0;
             for (int height = 2; height >= bottom; height--) {
                 BlockPos target = pos.above(height);
-                if (!ClassicRingItem.canChange(level, player, ring, target)) return;
+                if (!canChange.test(target)) return;
                 level.destroyBlock(target, true, player);
             }
         } else {
             BlockPos next = top.above();
-            if (ClassicRingItem.canChange(level, player, ring, next) && level.isEmptyBlock(next)
+            if (canChange.test(next) && level.isEmptyBlock(next)
                     && plant.defaultBlockState().canSurvive(level, next)) {
                 level.setBlockAndUpdate(next, plant.defaultBlockState());
             }

@@ -56,6 +56,10 @@ public final class ClassicRingItem extends Item {
         this.singlePower = singlePower;
     }
 
+    boolean isHarvestBand() {
+        return singlePower == Power.HARVEST;
+    }
+
     private boolean isArcana() {
         return singlePower == null;
     }

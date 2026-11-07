@@ -29,6 +29,8 @@ public final class PERegistries {
     public static BlockEntityType<EnergyCondenserBlockEntity> ENERGY_CONDENSER_ENTITY;
     public static BlockEntityType<MatterFurnaceBlockEntity> MATTER_FURNACE_ENTITY;
 
+    public static BlockEntityType<DarkMatterPedestalBlockEntity> DARK_MATTER_PEDESTAL_ENTITY;
+
     private PERegistries() {
     }
 
@@ -90,6 +92,18 @@ public final class PERegistries {
         block("aeternalis_fuel_block", fuelBlock(MapColor.COLOR_LIGHT_GRAY));
         block("dark_matter_block", matterBlock(MapColor.COLOR_BLACK), fireResistant());
         block("red_matter_block", matterBlock(MapColor.COLOR_RED), fireResistant());
+        var pedestalKey = ResourceKey.create(Registries.BLOCK, PECore.id("dm_pedestal"));
+        Block pedestal = new DarkMatterPedestalBlock(BlockBehaviour.Properties.of().setId(pedestalKey)
+                .mapColor(MapColor.COLOR_BLACK).strength(2.0F, 6.0F).noOcclusion()
+                .pushReaction(net.minecraft.world.level.material.PushReaction.IMMOVEABLE)
+                .lightLevel(state -> state.getValue(DarkMatterPedestalBlock.ACTIVE) ? 7 : 0));
+        Registry.register(BuiltInRegistries.BLOCK, pedestalKey, pedestal);
+        BLOCKS.put("dm_pedestal", pedestal);
+        var pedestalItemKey = ResourceKey.create(Registries.ITEM, PECore.id("dm_pedestal"));
+        Registry.register(BuiltInRegistries.ITEM, pedestalItemKey,
+                new BlockItem(pedestal, new Item.Properties().setId(pedestalItemKey).useBlockDescriptionPrefix().fireResistant()));
+        DARK_MATTER_PEDESTAL_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, PECore.id("dm_pedestal"),
+                new BlockEntityType<>(DarkMatterPedestalBlockEntity::new, java.util.Set.of(pedestal)));
         darkMatterFurnace = matterFurnace("dm_furnace", MapColor.COLOR_BLACK);
         redMatterFurnace = matterFurnace("rm_furnace", MapColor.COLOR_RED);
         // The table should always drop itself when broken; requiring a particular

@@ -11,6 +11,8 @@ import net.minecraft.world.InteractionResult;
 public class PEClient implements ClientModInitializer {
     @Override public void onInitializeClient() {
         StoneControls.register();
+        net.minecraft.client.renderer.blockentity.BlockEntityRenderers.register(PERegistries.DARK_MATTER_PEDESTAL_ENTITY,
+                DarkMatterPedestalRenderer::new);
         net.minecraft.client.gui.screens.MenuScreens.register(PERegistries.ALCHEMICAL_CHEST_MENU, AlchemicalChestScreen::new);
         net.minecraft.client.gui.screens.MenuScreens.register(PERegistries.TRANSMUTATION_MENU, TransmutationScreen::new);
         ClientPlayNetworking.registerGlobalReceiver(PEPackets.Snapshot.TYPE, (packet, context) ->
