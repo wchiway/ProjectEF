@@ -33,6 +33,7 @@ public class PECore implements ModInitializer {
         StoneMobTransmutation.register();
         SwiftwolfRingItem.registerEvents();
         EvertideAmuletItem.registerEvents();
+        ClassicRingItem.registerEvents();
         net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.registerGlobalReceiver(
             PEPackets.StoneAction.TYPE, (packet, context) -> context.server().execute(() -> {
                 var player = context.player();
@@ -40,6 +41,8 @@ public class PECore implements ModInitializer {
                         : net.minecraft.world.InteractionHand.MAIN_HAND;
                 if (player.getItemInHand(hand).getItem() instanceof EvertideAmuletItem) {
                     EvertideAmuletItem.action(player, packet.command(), hand);
+                } else if (player.getItemInHand(hand).getItem() instanceof ClassicRingItem) {
+                    ClassicRingItem.action(player, packet.command(), hand);
                 } else {
                     PhilosophersStoneItem.action(player, packet.command(), hand);
                 }

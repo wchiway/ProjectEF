@@ -2,6 +2,7 @@ package moze_intel.projecte.client;
 
 import moze_intel.projecte.*;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.event.client.player.ClientPreAttackCallback;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
@@ -25,6 +26,13 @@ public final class StoneControls {
     lower.setKey(InputConstants.UNKNOWN);KeyMapping.resetMapping();
    }
   });
+  ClientPreAttackCallback.EVENT.register((client, player, clicks) -> {
+   if (!(player.getMainHandItem().getItem() instanceof ClassicRingItem ring) || !ring.supportsControl(5)
+           || !player.mayBuild() || player.isSpectator()
+           || !ClientPlayNetworking.canSend(PEPackets.StoneAction.TYPE)) return false;
+   if (clicks > 0) send(client, 5);
+   return true;
+  });
   ClientTickEvents.END_CLIENT_TICK.register(client->{
    while(charge.consumeClick())send(client,client.player!=null&&client.player.isShiftKeyDown()?1:0);
    while(lower.consumeClick())send(client,1);
@@ -40,6 +48,8 @@ public final class StoneControls {
   ClientPlayNetworking.send(new PEPackets.StoneAction(command,offhand));
  }
  private static boolean supportsControls(net.minecraft.world.item.Item item, int command) {
-  return item instanceof PhilosophersStoneItem || (item instanceof EvertideAmuletItem && command <= 3);
+  return item instanceof PhilosophersStoneItem && command < 5
+          || item instanceof EvertideAmuletItem && command <= 3
+          || item instanceof ClassicRingItem ring && ring.supportsControl(command);
  }
 }

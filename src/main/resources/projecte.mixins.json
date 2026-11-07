@@ -5,7 +5,8 @@
   "mixins": [
     "PhilosopherRemainderMixin",
     "StoneCraftingRemainderMixin",
-    "EvertideWaterMovementMixin"
+    "EvertideWaterMovementMixin",
+    "HarvestFarmlandMixin"
   ],
   "injectors": {
     "defaultRequire": 1

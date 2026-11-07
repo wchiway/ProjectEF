@@ -1,6 +1,69 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "projecte:item/arcana_ring"
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "zero_off",
+        "model": {
+          "type": "minecraft:model",
+          "model": "projecte:item/arcana_zero_off"
+        }
+      },
+      {
+        "when": "zero_on",
+        "model": {
+          "type": "minecraft:model",
+          "model": "projecte:item/arcana_zero_on"
+        }
+      },
+      {
+        "when": "ignition_off",
+        "model": {
+          "type": "minecraft:model",
+          "model": "projecte:item/arcana_ignition_off"
+        }
+      },
+      {
+        "when": "ignition_on",
+        "model": {
+          "type": "minecraft:model",
+          "model": "projecte:item/arcana_ignition_on"
+        }
+      },
+      {
+        "when": "wind_off",
+        "model": {
+          "type": "minecraft:model",
+          "model": "projecte:item/arcana_swrg_off"
+        }
+      },
+      {
+        "when": "wind_on",
+        "model": {
+          "type": "minecraft:model",
+          "model": "projecte:item/arcana_swrg_on"
+        }
+      },
+      {
+        "when": "harvest_off",
+        "model": {
+          "type": "minecraft:model",
+          "model": "projecte:item/arcana_harv_off"
+        }
+      },
+      {
+        "when": "harvest_on",
+        "model": {
+          "type": "minecraft:model",
+          "model": "projecte:item/arcana_harv_on"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "projecte:item/arcana_ring"
+    }
   }
 }

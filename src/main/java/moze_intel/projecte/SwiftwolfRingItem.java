@@ -82,13 +82,14 @@ final class SwiftwolfRingItem extends Item {
 
     static void tickPlayer(ServerPlayer player) {
         int modes = carriedMode(player);
-        if (modes <= 0 || !player.isAlive() || player.isSpectator()) {
+        boolean arcana = ClassicRingItem.hasArcana(player);
+        if ((!arcana && modes <= 0) || !player.isAlive() || player.isSpectator()) {
             clear(player);
             return;
         }
         ActiveRing state = ACTIVE.computeIfAbsent(player, ignored -> new ActiveRing());
-        tickFlight(player, state, (modes & FLIGHT) != 0);
-        if ((modes & REPEL) != 0 && player.tickCount % 5 == 0) {
+        tickFlight(player, state, (modes & FLIGHT) != 0, arcana);
+        if (modes > 0 && (modes & REPEL) != 0 && player.tickCount % 5 == 0) {
             if (state.repelTicks == 0 && pay(player)) state.repelTicks = PAID_TICKS;
             if (state.repelTicks > 0) {
                 state.repelTicks -= 5;
@@ -97,12 +98,12 @@ final class SwiftwolfRingItem extends Item {
         }
     }
 
-    private static void tickFlight(ServerPlayer player, ActiveRing state, boolean enabled) {
+    private static void tickFlight(ServerPlayer player, ActiveRing state, boolean enabled, boolean free) {
         if (player.getAbilities().instabuild) {
             state.grantedFlight = false;
             return;
         }
-        boolean funded = enabled && (state.flightTicks > 0 || PETransmutationState.balance(player) >= COST);
+        boolean funded = free || enabled && (state.flightTicks > 0 || PETransmutationState.balance(player) >= COST);
         if (!funded) {
             revokeFlight(player, state);
             return;
@@ -112,7 +113,7 @@ final class SwiftwolfRingItem extends Item {
             state.grantedFlight = true;
             player.onUpdateAbilities();
         }
-        if (state.grantedFlight && player.getAbilities().flying) {
+        if (!free && state.grantedFlight && player.getAbilities().flying) {
             if (state.flightTicks == 0 && pay(player)) state.flightTicks = PAID_TICKS;
             if (state.flightTicks > 0) state.flightTicks--;
             else revokeFlight(player, state);
@@ -123,7 +124,7 @@ final class SwiftwolfRingItem extends Item {
         return player.getAbilities().instabuild || PETransmutationState.spendEmc(player, COST);
     }
 
-    private static void repel(ServerPlayer player) {
+    static void repel(ServerPlayer player) {
         for (var entity : player.level().getEntities(player, player.getBoundingBox().inflate(5.0),
                 target -> target.isAlive() && (target instanceof Mob
                         || target instanceof Projectile shot && shot.getOwner() != player))) {

@@ -3,14 +3,15 @@
   "category": "equipment",
   "key": {
     "D": "projecte:dark_matter",
-    "F": "#minecraft:flowers",
+    "F": "minecraft:dandelion",
     "I": "projecte:iron_band",
-    "S": "#minecraft:saplings"
+    "S": "#minecraft:saplings",
+    "R": "minecraft:poppy"
   },
   "pattern": [
     "SFS",
     "DID",
-    "SFS"
+    "SRS"
   ],
   "result": {
     "count": 1,

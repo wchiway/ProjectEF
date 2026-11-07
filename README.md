@@ -6,9 +6,9 @@ It is designed for **Minecraft 26.3** with **Fabric**. The goal is to make EMC u
 
 ## Current version
 
-**1.1.33-fabric.26.3-preservation.2**
+**1.2.10-fabric.26.3**
 
-[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.9-fabric.26.3.jar?raw=true)
+[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.10-fabric.26.3.jar?raw=true)
 
 Install Fabric Loader and Fabric API for Minecraft 26.3. Close Minecraft, remove
 any previous ProjectEF JAR, and place the downloaded JAR in `mods/`. Install the
@@ -27,6 +27,13 @@ same ProjectEF version on clients and servers. Java 25 is required.
 - Dark Matter Furnace
 - Red Matter Furnace
 - Custom ProjectE-style items, including the Black Hole Band
+
+## Classic rings
+
+Hold a ring and press **G** to toggle its aura. On the Ring of Arcana, **C**
+cycles frost, ignition, wind, and harvest. **V** raises charge, **Shift+V**
+lowers it, and **R** releases the charged ability. The ProjectE keybinds are
+configurable, and each ring's tooltip lists its mouse controls.
 
 ## EMC shop
 

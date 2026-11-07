@@ -153,6 +153,10 @@ public final class PERegistries {
         if (name.equals("philosophers_stone")) item = new PhilosophersStoneItem(settings);
         else if (name.equals("evertide_amulet")) item = new EvertideAmuletItem(settings);
         else if (name.equals("swiftwolf_rending_gale")) item = new SwiftwolfRingItem(settings);
+        else if (name.equals("arcana_ring")) item = new ClassicRingItem(settings, null);
+        else if (name.equals("zero_ring")) item = new ClassicRingItem(settings, ClassicRingItem.Power.ZERO);
+        else if (name.equals("ignition_ring")) item = new ClassicRingItem(settings, ClassicRingItem.Power.IGNITION);
+        else if (name.equals("harvest_goddess_band")) item = new ClassicRingItem(settings, ClassicRingItem.Power.HARVEST);
         else if (name.matches("[dr]m_(pick|axe|shovel|sword|hoe|shears|hammer|katar|morning_star)")) item = new MatterToolItem(settings, name.substring(3), name.startsWith("rm_"));
         else if (name.matches("(dm|rm|gem)_(helmet|chestplate|leggings|boots)")) {
             var type = switch(name.substring(name.indexOf('_') + 1)) { case "helmet" -> net.minecraft.world.item.equipment.ArmorType.HELMET; case "chestplate" -> net.minecraft.world.item.equipment.ArmorType.CHESTPLATE; case "leggings" -> net.minecraft.world.item.equipment.ArmorType.LEGGINGS; default -> net.minecraft.world.item.equipment.ArmorType.BOOTS; };
