@@ -31,6 +31,7 @@ public class PECore implements ModInitializer {
         PERegistries.register();
         PEPackets.register();
         StoneMobTransmutation.register();
+        SwiftwolfRingItem.registerEvents();
         net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.registerGlobalReceiver(
             PEPackets.StoneAction.TYPE, (packet, context) -> context.server().execute(() ->
                 PhilosophersStoneItem.action(context.player(),packet.command(),packet.offhand()?net.minecraft.world.InteractionHand.OFF_HAND:net.minecraft.world.InteractionHand.MAIN_HAND)));

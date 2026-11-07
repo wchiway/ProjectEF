@@ -149,6 +149,22 @@ public final class PETransmutationState extends SavedData {
         if (!learned.equals(current.learned())) changed = true;
         return changed ? new Account(current.balance(), learned, List.copyOf(variants), remapFavorites(current, learned, List.copyOf(variants))) : current;
     }
+    static boolean spendEmc(ServerPlayer player, long amount) {
+        PETransmutationState state = state(player);
+        String owner = player.getUUID().toString();
+        Account current = state.accounts.get(owner);
+        if (amount <= 0 || current == null || current.balance() < amount) return false;
+        state.accounts.put(owner, new Account(current.balance() - amount, current.learned(),
+                current.variants(), current.favorites()));
+        state.setDirty();
+        return true;
+    }
+
+    static long balance(ServerPlayer player) {
+        Account account = state(player).accounts.get(player.getUUID().toString());
+        return account == null ? 0 : account.balance();
+    }
+
     public static boolean deposit(MinecraftServer server, UUID owner, long unit, int quantity) {
         if (unit <= 0 || quantity <= 0 || unit > (Long.MAX_VALUE / quantity)) return false;
         PETransmutationState state = server.overworld().getDataStorage().computeIfAbsent(TYPE);

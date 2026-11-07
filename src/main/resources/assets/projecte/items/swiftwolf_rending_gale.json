@@ -1,6 +1,34 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "projecte:item/swiftwolf_rending_gale"
+    "type": "minecraft:select",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "cases": [
+      {
+        "when": "flight",
+        "model": {
+          "type": "minecraft:model",
+          "model": "projecte:item/swiftwolf_rending_gale_fly"
+        }
+      },
+      {
+        "when": "repel",
+        "model": {
+          "type": "minecraft:model",
+          "model": "projecte:item/swiftwolf_rending_gale_repel"
+        }
+      },
+      {
+        "when": "both",
+        "model": {
+          "type": "minecraft:model",
+          "model": "projecte:item/swiftwolf_rending_gale_fly_repel"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "projecte:item/swiftwolf_rending_gale"
+    }
   }
 }
