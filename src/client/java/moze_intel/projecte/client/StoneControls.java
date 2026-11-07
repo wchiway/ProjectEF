@@ -35,8 +35,11 @@ public final class StoneControls {
  }
  private static void send(Minecraft client,int command){
   if(client.player==null||client.gui.screen()!=null||!ClientPlayNetworking.canSend(PEPackets.StoneAction.TYPE))return;
-  boolean offhand=!(client.player.getMainHandItem().getItem() instanceof PhilosophersStoneItem);
-  if(!(client.player.getItemInHand(offhand?net.minecraft.world.InteractionHand.OFF_HAND:net.minecraft.world.InteractionHand.MAIN_HAND).getItem() instanceof PhilosophersStoneItem))return;
+  boolean offhand = !supportsControls(client.player.getMainHandItem().getItem(), command);
+  if (offhand && !supportsControls(client.player.getOffhandItem().getItem(), command)) return;
   ClientPlayNetworking.send(new PEPackets.StoneAction(command,offhand));
+ }
+ private static boolean supportsControls(net.minecraft.world.item.Item item, int command) {
+  return item instanceof PhilosophersStoneItem || (item instanceof EvertideAmuletItem && command <= 3);
  }
 }

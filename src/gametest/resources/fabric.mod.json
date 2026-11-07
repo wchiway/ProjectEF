@@ -8,7 +8,8 @@
       "moze_intel.projecte.DurabilityPreservationTests",
       "moze_intel.projecte.StoneBehaviorTests",
       "moze_intel.projecte.MachineLearningTests",
-      "moze_intel.projecte.SwiftwolfRingTests"
+      "moze_intel.projecte.SwiftwolfRingTests",
+      "moze_intel.projecte.EvertideAmuletTests"
     ]
   }
 }

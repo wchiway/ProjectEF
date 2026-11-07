@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": ["projecte:evertide_amulet", "minecraft:bucket"],
+  "result": {"id": "minecraft:water_bucket", "count": 1}
+}

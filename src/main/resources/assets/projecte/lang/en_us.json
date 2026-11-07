@@ -717,9 +717,9 @@
   "transmutation.projecte.unlearned.8": "e",
   "transmutation.projecte.unlearned.9": "d",
   "key.category.projecte.stone": "ProjectE — Philosopher's Stone",
-  "key.projecte.stone_charge": "Charge Stone (sneak to lower)",
-  "key.projecte.stone_lower": "Lower Stone Charge (optional)",
-  "key.projecte.stone_fire": "Fire Mob Transmutation",
-  "key.projecte.stone_craft": "Stone Crafting Grid",
+  "key.projecte.stone_charge": "Charge Stone or Amulet (sneak to lower)",
+  "key.projecte.stone_lower": "Lower Stone or Amulet Charge (optional)",
+  "key.projecte.stone_fire": "Fire Stone or Evertide Projectile",
+  "key.projecte.stone_craft": "Stone Crafting Grid / Freeze Water",
   "key.projecte.stone_mode": "Cycle Stone Area Mode"
 }

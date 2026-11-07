@@ -4,7 +4,8 @@
   "compatibilityLevel": "JAVA_25",
   "mixins": [
     "PhilosopherRemainderMixin",
-    "StoneCraftingRemainderMixin"
+    "StoneCraftingRemainderMixin",
+    "EvertideWaterMovementMixin"
   ],
   "injectors": {
     "defaultRequire": 1

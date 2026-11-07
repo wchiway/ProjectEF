@@ -151,6 +151,7 @@ public final class PERegistries {
         Item.Properties settings = properties.apply(new Item.Properties().setId(key));
         Item item;
         if (name.equals("philosophers_stone")) item = new PhilosophersStoneItem(settings);
+        else if (name.equals("evertide_amulet")) item = new EvertideAmuletItem(settings);
         else if (name.equals("swiftwolf_rending_gale")) item = new SwiftwolfRingItem(settings);
         else if (name.matches("[dr]m_(pick|axe|shovel|sword|hoe|shears|hammer|katar|morning_star)")) item = new MatterToolItem(settings, name.substring(3), name.startsWith("rm_"));
         else if (name.matches("(dm|rm|gem)_(helmet|chestplate|leggings|boots)")) {
