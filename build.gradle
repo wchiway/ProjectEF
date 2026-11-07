@@ -49,6 +49,15 @@ processResources {
     }
 }
 
+// Optional release fixtures for machine drop / transmutation integration tests.
+if (providers.gradleProperty('testWithAA').isPresent()) {
+    repositories { maven { url = 'https://maven.twelveiterations.com/repository/maven-public/' } }
+    dependencies {
+        gametestImplementation files('libs/actuallyadditions-beta.2.jar', 'libs/automatic-emc-1.0.1.jar', 'libs/exnihiloomnia-alpha.4.jar')
+        gametestImplementation 'net.blay09.mods:balm-fabric:26.3.0.1'
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.release = 25
     options.encoding = "UTF-8"

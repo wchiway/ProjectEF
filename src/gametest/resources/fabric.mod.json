@@ -6,7 +6,8 @@
   "entrypoints": {
     "fabric-gametest": [
       "moze_intel.projecte.DurabilityPreservationTests",
-      "moze_intel.projecte.StoneBehaviorTests"
+      "moze_intel.projecte.StoneBehaviorTests",
+      "moze_intel.projecte.MachineLearningTests"
     ]
   }
 }

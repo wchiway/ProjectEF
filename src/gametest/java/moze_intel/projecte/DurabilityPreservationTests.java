@@ -27,9 +27,9 @@ public final class DurabilityPreservationTests {
     }
 
     private static Object account(List<String> learned, List<ItemStack> variants) throws Exception {
-        Constructor<?> constructor = accountClass().getDeclaredConstructor(long.class, List.class, List.class);
+        Constructor<?> constructor = accountClass().getDeclaredConstructor(long.class, List.class, List.class, List.class);
         constructor.setAccessible(true);
-        return constructor.newInstance(123456L, learned, variants);
+        return constructor.newInstance(123456L, learned, variants, List.of());
     }
 
     private static Object normalize(Object account) throws Exception {
@@ -133,6 +133,7 @@ public final class DurabilityPreservationTests {
     public void damagedVariantSaleAndPurchaseRoundTrip(GameTestHelper helper) throws Exception {
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
         player.getInventory().setItem(0, new ItemStack(BuiltInRegistries.ITEM.getValue(PECore.id("transmutation_tablet"))));
+        player.containerMenu = new TransmutationMenu(1, player.getInventory(), true, 0L);
         for (int damage : new int[] {50, 500}) {
             player.getInventory().setItem(1, sword(helper, damage, 3));
             PETransmutationState.action(player, new PEPackets.Action(true, 0L, "sell", 1, "", 1));

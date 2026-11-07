@@ -287,8 +287,13 @@ public final class PETransmutationState extends SavedData {
                     && unit <= (Long.MAX_VALUE - current.balance()) / quantity) {
                 Set<String> known = new LinkedHashSet<>(current.learned());
                 List<ItemStack> variants = new java.util.ArrayList<>(current.variants());
-                if (!sellOnlyMap(stack) && !containsStoredItems(stack)) {
-                    ItemStack exemplar = PEPreservationConfig.exemplar(stack);
+                ItemStack exemplar = PEPreservationConfig.exemplar(stack);
+                // Broken machines often carry operational block data even when empty.
+                // Learn an empty block, retaining separate item-level names/enchants,
+                // rather than either copying its saved contents or silently skipping it.
+                if (exemplar.getItem() instanceof net.minecraft.world.item.BlockItem)
+                    exemplar.remove(DataComponents.BLOCK_ENTITY_DATA);
+                if (!sellOnlyMap(stack) && !containsStoredItems(exemplar)) {
                     boolean distinct = PEPreservationConfig.enabled() && !ItemStack.isSameItemSameComponents(exemplar, new ItemStack(exemplar.getItem()));
                     if (distinct) {
                         // Do not grant the plain item merely by learning a modified version.
