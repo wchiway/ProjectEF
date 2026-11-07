@@ -65,6 +65,7 @@ public final class MatterToolItem extends Item {
    int r=Math.min(charge,2);Direction.Axis axis=c.getClickedFace().getAxis();
    for(int a=-r;a<=r;a++)for(int b=-r;b<=r;b++)blocks.add(axis==Direction.Axis.X?origin.offset(0,a,b):axis==Direction.Axis.Y?origin.offset(a,0,b):origin.offset(a,b,0));
   }
+  List<ItemStack> drops = new ArrayList<>();
   for(BlockPos p:blocks){
    if(!level.isLoaded(p)||!level.mayInteract(player,p)||!player.mayUseItemAt(p,c.getClickedFace(),c.getItemInHand()))continue;
    BlockState state=level.getBlockState(p);
@@ -79,8 +80,13 @@ public final class MatterToolItem extends Item {
     continue;
    }
    boolean mine=switch(kind){case "pick","hammer"->state.is(BlockTags.MINEABLE_WITH_PICKAXE);case "morning_star"->state.is(BlockTags.MINEABLE_WITH_PICKAXE)||state.is(BlockTags.MINEABLE_WITH_SHOVEL);case "shovel"->state.is(BlockTags.MINEABLE_WITH_SHOVEL);case "axe","katar"->state.is(BlockTags.LOGS);case "shears"->state.is(BlockTags.LEAVES)||state.is(Blocks.COBWEB)||state.is(Blocks.VINE);default->false;};
-   if(mine&&level.destroyBlock(p,false,player))Block.dropResources(state,level,p,null,player,c.getItemInHand());
+   if (mine) {
+    var loot = level.getGameRules().get(net.minecraft.world.level.gamerules.GameRules.BLOCK_DROPS)
+            ? Block.getDrops(state, level, p, null, player, c.getItemInHand()) : List.<ItemStack>of();
+    if (level.destroyBlock(p, false, player)) drops.addAll(loot);
+   }
   }
+  LootBallItem.drop(level, net.minecraft.world.phys.Vec3.atCenterOf(origin.relative(c.getClickedFace())), drops);
   player.getCooldowns().addCooldown(c.getItemInHand(),10);return InteractionResult.SUCCESS;
  }
  @Override public InteractionResult interactLivingEntity(ItemStack stack,Player player,LivingEntity target,InteractionHand hand){

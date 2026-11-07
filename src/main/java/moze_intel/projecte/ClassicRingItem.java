@@ -56,10 +56,6 @@ public final class ClassicRingItem extends Item {
         this.singlePower = singlePower;
     }
 
-    boolean isHarvestBand() {
-        return singlePower == Power.HARVEST;
-    }
-
     private boolean isArcana() {
         return singlePower == null;
     }
@@ -314,7 +310,10 @@ public final class ClassicRingItem extends Item {
     }
 
     private static void freeze(ServerLevel level, Player player, ItemStack stack, int radius, int height, boolean lava) {
-        BlockPos center = player.blockPosition();
+        freeze(level, player, stack, player.blockPosition(), radius, height, lava);
+    }
+
+    static void freeze(ServerLevel level, Player player, ItemStack stack, BlockPos center, int radius, int height, boolean lava) {
         for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, -height, -radius),
                 center.offset(radius, height, radius))) {
             if (!canChange(level, player, stack, pos)) continue;

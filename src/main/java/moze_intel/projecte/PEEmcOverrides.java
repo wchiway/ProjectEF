@@ -31,6 +31,8 @@ public final class PEEmcOverrides extends SavedData {
         return prices.getOrDefault(item, PETransmutationState.value(item));
     }
     public long value(ItemStack stack) {
+        if (UtilityPowerItem.containsValue(stack)) return 0;
+        if (stack.getItem() instanceof KleinStarItem star && star.stored(stack) > 0) return 0;
         String item = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();
         if (PEEmcBlacklist.contains(item)) return 0;
         // Filled/explorer maps use the ordinary map item plus map data. They sell at

@@ -44,11 +44,15 @@ public final class StoneControls {
  private static void send(Minecraft client,int command){
   if(client.player==null||client.gui.screen()!=null||!ClientPlayNetworking.canSend(PEPackets.StoneAction.TYPE))return;
   boolean offhand = !supportsControls(client.player.getMainHandItem().getItem(), command);
-  if (offhand && !supportsControls(client.player.getOffhandItem().getItem(), command)) return;
+  if (offhand && !supportsControls(client.player.getOffhandItem().getItem(), command)) {
+      if (!GemArmorEffects.supportsControl(client.player, command)) return;
+      offhand = false;
+  }
   ClientPlayNetworking.send(new PEPackets.StoneAction(command,offhand));
  }
  private static boolean supportsControls(net.minecraft.world.item.Item item, int command) {
   return item instanceof PhilosophersStoneItem && command < 5
+          || item instanceof VolcaniteAmuletItem && command <= 2
           || item instanceof EvertideAmuletItem && command <= 3
           || item instanceof ClassicRingItem ring && ring.supportsControl(command);
  }

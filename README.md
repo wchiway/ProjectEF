@@ -6,9 +6,9 @@ It is designed for **Minecraft 26.3** with **Fabric**. The goal is to make EMC u
 
 ## Current version
 
-**1.2.11-fabric.26.3**
+**1.2.12-fabric.26.3**
 
-[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.11-fabric.26.3.jar?raw=true)
+[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.12-fabric.26.3.jar?raw=true)
 
 Install Fabric Loader and Fabric API for Minecraft 26.3. Close Minecraft, remove
 any previous ProjectEF JAR, and place the downloaded JAR in `mods/`. Install the
@@ -23,7 +23,8 @@ same ProjectEF version on clients and servers. Java 25 is required.
 - Vanilla EMC values tuned for this project
 - EMC support for registered mod items
 - World-specific EMC overrides
-- Energy Condenser
+- Energy Collectors and Antimatter Relays Mk I–III
+- Energy Condenser and chargeable Klein Stars
 - Dark Matter Furnace
 - Red Matter Furnace
 - Dark Matter Pedestal
@@ -39,10 +40,31 @@ configurable, and each ring's tooltip lists its mouse controls.
 ### Dark Matter Pedestal
 
 Craft it with five Dark Matter Blocks and four Red Matter. Right-click the
-pedestal with the Harvest Goddess Band to mount it. Empty both hands and
-right-click to toggle it, or sneak-right-click to take the band back. An active
-pedestal grows and harvests crops in a 9×9×9 area while its chunk is ticking.
-Harvested items drop onto the ground.
+pedestal with a supported power item to mount it. Empty both hands and
+right-click to toggle it, or sneak-right-click to take the band back. While the pedestal is ticking, a mounted Harvest Goddess Band grows and
+harvests crops in a 9×9×9 area and drops the harvest on the ground.
+Other supported items include the Black Hole Band, Watch of Flowing Time,
+Evertide and Volcanite Amulets, Repair Talisman, and the Zero, Ignition and
+Swiftwolf rings. The Body, Soul and Life Stones and Archangel's Smite also
+have mounted effects.
+
+## EMC machines and storage
+
+A collector uses the light above it to generate EMC. Place it beside a relay
+or a condenser to transfer EMC. The machine slots from left to right are
+**input**, **Klein Star**, **target** (condenser only), and **output**. The final
+slot is unused. A collector upgrades fuel placed in input, and a relay burns
+valued input items for EMC. A relay also drains EMC from a star placed in input. A condenser copies the item in its target slot
+using its own input or EMC from adjacent machines. A condenser with an empty
+target keeps depositing input EMC into its owner's account.
+
+Sneak-use a Klein Star to charge it from your account, or use it normally to
+deposit the charge. A machine can charge a star in its Klein Star slot. Gem
+Armor and the Tome of Knowledge require fully charged Omega stars.
+
+Use an Alchemy Bag to open 104 slots of storage shared by bags of that color
+for your player. With both hands empty, press **V** to arm Gem Armor attacks,
+**R** for the helmet's lightning, and **C** for the chestplate's shockwave.
 
 ## EMC shop
 

@@ -149,6 +149,21 @@ public final class PETransmutationState extends SavedData {
         if (!learned.equals(current.learned())) changed = true;
         return changed ? new Account(current.balance(), learned, List.copyOf(variants), remapFavorites(current, learned, List.copyOf(variants))) : current;
     }
+    static boolean learnAll(ServerPlayer player) {
+        PETransmutationState state = state(player);
+        Account account = state.account(player);
+        Set<String> known = new LinkedHashSet<>(account.learned());
+        var prices = PEEmcOverrides.forPlayer(player);
+        for (var item : BuiltInRegistries.ITEM) {
+            String id = BuiltInRegistries.ITEM.getKey(item).toString();
+            if (prices.value(id) > 0) known.add(id);
+        }
+        if (known.size() == account.learned().size()) return false;
+        state.update(player, new Account(account.balance(), List.copyOf(known), account.variants(), account.favorites()));
+        PowerFuel.notice(player, "Learned " + (known.size() - account.learned().size()) + " items");
+        return true;
+    }
+
     static boolean spendEmc(ServerPlayer player, long amount) {
         PETransmutationState state = state(player);
         String owner = player.getUUID().toString();

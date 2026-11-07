@@ -28,7 +28,7 @@ public final class DarkMatterPedestalBlockEntity extends BlockEntity {
     }
 
     static boolean supports(ItemStack stack) {
-        return stack.getItem() instanceof ClassicRingItem ring && ring.isHarvestBand();
+        return PedestalPowers.supports(stack);
     }
 
     public ItemStack item() {
@@ -55,7 +55,7 @@ public final class DarkMatterPedestalBlockEntity extends BlockEntity {
                 || !supports(pedestal.item)) return;
         FakePlayer actor = pedestal.owner == null ? FakePlayer.get(server)
                 : FakePlayer.get(server, new GameProfile(pedestal.owner, "[ProjectEF Pedestal]"));
-        HarvestRingEffects.tendFromPedestal(server, actor, pedestal.item, pos);
+        PedestalPowers.apply(server, pos, actor, pedestal.item);
     }
 
     private void syncItem() {

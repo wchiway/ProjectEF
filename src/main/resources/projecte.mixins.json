@@ -6,7 +6,10 @@
     "PhilosopherRemainderMixin",
     "StoneCraftingRemainderMixin",
     "EvertideWaterMovementMixin",
-    "HarvestFarmlandMixin"
+    "HarvestFarmlandMixin",
+    "NovaChargeMixin",
+    "NovaDetonationMixin",
+    "KleinStarRecipesMixin"
   ],
   "injectors": {
     "defaultRequire": 1

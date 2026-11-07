@@ -34,6 +34,10 @@ public class PECore implements ModInitializer {
         SwiftwolfRingItem.registerEvents();
         EvertideAmuletItem.registerEvents();
         ClassicRingItem.registerEvents();
+        GemArmorEffects.register();
+        net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) ->
+                !(entity instanceof ServerPlayer player && source.is(net.minecraft.tags.DamageTypeTags.IS_FIRE)
+                        && VolcaniteAmuletItem.isCarried(player)));
         net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.registerGlobalReceiver(
             PEPackets.StoneAction.TYPE, (packet, context) -> context.server().execute(() -> {
                 var player = context.player();
@@ -41,14 +45,20 @@ public class PECore implements ModInitializer {
                         : net.minecraft.world.InteractionHand.MAIN_HAND;
                 if (player.getItemInHand(hand).getItem() instanceof EvertideAmuletItem) {
                     EvertideAmuletItem.action(player, packet.command(), hand);
+                } else if (player.getItemInHand(hand).getItem() instanceof VolcaniteAmuletItem) {
+                    VolcaniteAmuletItem.action(player, packet.command(), hand);
                 } else if (player.getItemInHand(hand).getItem() instanceof ClassicRingItem) {
                     ClassicRingItem.action(player, packet.command(), hand);
+                } else if (GemArmorEffects.supportsControl(player, packet.command())) {
+                    GemArmorEffects.action(player, packet.command());
                 } else {
                     PhilosophersStoneItem.action(player, packet.command(), hand);
                 }
             }));
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                UtilityPowerItem.tickPlayer(player);
+                GemArmorEffects.tick(player);
                 if (!hasBlackHoleBand(player)) continue;
                 for (ItemEntity entity : player.level().getEntitiesOfClass(ItemEntity.class,
                         player.getBoundingBox().inflate(8.0D), item -> item.isAlive() && !item.hasPickUpDelay())) {
@@ -73,8 +83,9 @@ public class PECore implements ModInitializer {
     private static boolean hasBlackHoleBand(ServerPlayer player) {
         for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
             ItemStack stack = player.getInventory().getItem(i);
-            if (!stack.isEmpty() && PERegistries.isBlackHoleBand(stack.getItem())) return true;
+            if (PERegistries.isBlackHoleBand(stack.getItem()) || UtilityPowerItem.isActiveVoidRing(stack)) return true;
         }
-        return false;
+        ItemStack offhand = player.getOffhandItem();
+        return PERegistries.isBlackHoleBand(offhand.getItem()) || UtilityPowerItem.isActiveVoidRing(offhand);
     }
 }

@@ -11,7 +11,8 @@
       "moze_intel.projecte.SwiftwolfRingTests",
       "moze_intel.projecte.EvertideAmuletTests",
       "moze_intel.projecte.ClassicRingTests",
-      "moze_intel.projecte.DarkMatterPedestalTests"
+      "moze_intel.projecte.DarkMatterPedestalTests",
+      "moze_intel.projecte.ClassicExpansionTests"
     ]
   }
 }

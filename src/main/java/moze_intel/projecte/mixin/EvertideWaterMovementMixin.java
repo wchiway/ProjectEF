@@ -1,6 +1,8 @@
 package moze_intel.projecte.mixin;
 
 import moze_intel.projecte.EvertideAmuletItem;
+import moze_intel.projecte.GemArmorEffects;
+import moze_intel.projecte.VolcaniteAmuletItem;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -21,15 +23,16 @@ public abstract class EvertideWaterMovementMixin {
     @Inject(method = "getLiquidCollisionShape", at = @At("HEAD"), cancellable = true)
     private void projecte$waterSurface(CallbackInfoReturnable<VoxelShape> result) {
         if ((Object) this instanceof Player player && !player.isShiftKeyDown()
-                && EvertideAmuletItem.isCarried(player)) {
+                && (EvertideAmuletItem.isCarried(player) || VolcaniteAmuletItem.isCarried(player))) {
             result.setReturnValue(PROJECTE_WATER_SURFACE);
         }
     }
 
     @Inject(method = "canStandOnFluid", at = @At("HEAD"), cancellable = true)
     private void projecte$walkOnWater(FluidState fluid, CallbackInfoReturnable<Boolean> result) {
-        if ((Object) this instanceof Player player && fluid.is(FluidTags.WATER)
-                && !player.isShiftKeyDown() && EvertideAmuletItem.isCarried(player)) {
+        if ((Object) this instanceof Player player && !player.isShiftKeyDown()
+                && (fluid.is(FluidTags.WATER) && EvertideAmuletItem.isCarried(player)
+                || fluid.is(FluidTags.LAVA) && VolcaniteAmuletItem.isCarried(player))) {
             result.setReturnValue(true);
         }
     }
@@ -37,7 +40,7 @@ public abstract class EvertideWaterMovementMixin {
     @Inject(method = "decreaseAirSupply", at = @At("HEAD"), cancellable = true)
     private void projecte$breatheUnderwater(int air, CallbackInfoReturnable<Integer> result) {
         if ((Object) this instanceof Player player && player.isEyeInFluid(FluidTags.WATER)
-                && EvertideAmuletItem.isCarried(player)) {
+                && (EvertideAmuletItem.isCarried(player) || GemArmorEffects.hasHelmet(player))) {
             result.setReturnValue(player.getMaxAirSupply());
         }
     }

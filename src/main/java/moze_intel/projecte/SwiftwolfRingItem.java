@@ -82,13 +82,13 @@ final class SwiftwolfRingItem extends Item {
 
     static void tickPlayer(ServerPlayer player) {
         int modes = carriedMode(player);
-        boolean arcana = ClassicRingItem.hasArcana(player);
-        if ((!arcana && modes <= 0) || !player.isAlive() || player.isSpectator()) {
+        boolean freeFlight = ClassicRingItem.hasArcana(player) || GemArmorEffects.hasFlight(player);
+        if ((!freeFlight && modes <= 0) || !player.isAlive() || player.isSpectator()) {
             clear(player);
             return;
         }
         ActiveRing state = ACTIVE.computeIfAbsent(player, ignored -> new ActiveRing());
-        tickFlight(player, state, (modes & FLIGHT) != 0, arcana);
+        tickFlight(player, state, (modes & FLIGHT) != 0, freeFlight);
         if (modes > 0 && (modes & REPEL) != 0 && player.tickCount % 5 == 0) {
             if (state.repelTicks == 0 && pay(player)) state.repelTicks = PAID_TICKS;
             if (state.repelTicks > 0) {
@@ -103,7 +103,7 @@ final class SwiftwolfRingItem extends Item {
             state.grantedFlight = false;
             return;
         }
-        boolean funded = free || enabled && (state.flightTicks > 0 || PETransmutationState.balance(player) >= COST);
+        boolean funded = free || enabled && (state.flightTicks > 0 || KleinStarItem.canPay(player, COST) || PETransmutationState.balance(player) >= COST);
         if (!funded) {
             revokeFlight(player, state);
             return;
@@ -121,7 +121,7 @@ final class SwiftwolfRingItem extends Item {
     }
 
     private static boolean pay(ServerPlayer player) {
-        return player.getAbilities().instabuild || PETransmutationState.spendEmc(player, COST);
+        return player.getAbilities().instabuild || KleinStarItem.pay(player, COST) || PETransmutationState.spendEmc(player, COST);
     }
 
     static void repel(ServerPlayer player) {

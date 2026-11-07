@@ -78,7 +78,9 @@ final class RingProjectiles {
                             && (!(entity instanceof Player other) || owner.canHarmPlayer(other)), 0.2F);
             if (mobHit != null) {
                 if (lightning) strike(BlockPos.containing(mobHit.getLocation()));
-                else if (ClassicRingItem.canChange(level, owner, ring, mobHit.getEntity().blockPosition())) {
+                else if (ring.getItem() instanceof VolcaniteAmuletItem) {
+                    VolcaniteAmuletItem.placeLava(level, owner, ring, mobHit.getEntity().blockPosition(), false);
+                } else if (ClassicRingItem.canChange(level, owner, ring, mobHit.getEntity().blockPosition())) {
                     mobHit.getEntity().igniteForSeconds(5);
                     burst(mobHit.getEntity().blockPosition());
                 }
@@ -86,7 +88,9 @@ final class RingProjectiles {
             }
             if (hitBlock) {
                 if (lightning) strike(blockHit.getBlockPos().relative(blockHit.getDirection()));
-                else if (glass && level.getBlockState(blockHit.getBlockPos()).is(Blocks.SAND)) {
+                else if (ring.getItem() instanceof VolcaniteAmuletItem) {
+                    VolcaniteAmuletItem.placeLava(level, owner, ring, blockHit.getBlockPos().relative(blockHit.getDirection()), false);
+                } else if (glass && level.getBlockState(blockHit.getBlockPos()).is(Blocks.SAND)) {
                     glassify(blockHit.getBlockPos());
                 } else {
                     ClassicRingItem.light(level, owner, ring, blockHit.getBlockPos());
@@ -96,7 +100,8 @@ final class RingProjectiles {
             }
             for (int step = 1; step <= 3; step++) {
                 Vec3 point = pos.lerp(end, step / 3.0);
-                level.sendParticles(lightning ? ParticleTypes.ELECTRIC_SPARK : ParticleTypes.FLAME,
+                level.sendParticles(lightning ? ParticleTypes.ELECTRIC_SPARK
+                                : ring.getItem() instanceof VolcaniteAmuletItem ? ParticleTypes.LAVA : ParticleTypes.FLAME,
                         point.x, point.y, point.z, 1, 0.02, 0.02, 0.02, 0);
             }
             pos = next;

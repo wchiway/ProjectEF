@@ -26,7 +26,7 @@ public final class PERegistries {
     private static Block energyCondenser;
     private static Block darkMatterFurnace;
     private static Block redMatterFurnace;
-    public static BlockEntityType<EnergyCondenserBlockEntity> ENERGY_CONDENSER_ENTITY;
+    public static BlockEntityType<EmcMachineBlockEntity> ENERGY_CONDENSER_ENTITY, EMC_MACHINE_ENTITY;
     public static BlockEntityType<MatterFurnaceBlockEntity> MATTER_FURNACE_ENTITY;
 
     public static BlockEntityType<DarkMatterPedestalBlockEntity> DARK_MATTER_PEDESTAL_ENTITY;
@@ -77,6 +77,7 @@ public final class PERegistries {
         }) {
             simpleItem(name, noStackFireResistant());
         }
+        simpleItem("loot_ball", noStack());
         transmutationTablet = simpleItem("transmutation_tablet", noStackFireResistant());
     }
 
@@ -104,16 +105,27 @@ public final class PERegistries {
                 new BlockItem(pedestal, new Item.Properties().setId(pedestalItemKey).useBlockDescriptionPrefix().fireResistant()));
         DARK_MATTER_PEDESTAL_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, PECore.id("dm_pedestal"),
                 new BlockEntityType<>(DarkMatterPedestalBlockEntity::new, java.util.Set.of(pedestal)));
+        var torchKey = ResourceKey.create(Registries.BLOCK, PECore.id("interdiction_torch"));
+        registerBlock("interdiction_torch", torchKey, new InterdictionTorchBlock(BlockBehaviour.Properties.of()
+                .setId(torchKey).noCollision().instabreak().lightLevel(state -> 14)), Function.identity());
+        registerNova("nova_catalyst", 4);
+        registerNova("nova_cataclysm", 7);
         darkMatterFurnace = matterFurnace("dm_furnace", MapColor.COLOR_BLACK);
         redMatterFurnace = matterFurnace("rm_furnace", MapColor.COLOR_RED);
         // The table should always drop itself when broken; requiring a particular
         // tool would make it appear to vanish when harvested by hand or with the
         // wrong tier of pickaxe.
         transmutationTable = transmutationTable("transmutation_table", table(10.0F, 30.0F));
-        energyCondenser = energyCondenser("energy_condenser", table(3.0F, 6.0F));
-        ENERGY_CONDENSER_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
-                ResourceKey.create(Registries.BLOCK_ENTITY_TYPE, PECore.id("energy_condenser")),
-                new BlockEntityType<>(EnergyCondenserBlockEntity::new, java.util.Set.of(energyCondenser)));
+        energyCondenser = emcMachine("energy_condenser", EmcMachineBlock.Kind.CONDENSER, 1);
+        ENERGY_CONDENSER_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, PECore.id("energy_condenser"),
+                new BlockEntityType<>(EmcMachineBlockEntity::new, java.util.Set.of(energyCondenser)));
+        var emcMachines = new java.util.HashSet<Block>();
+        for (int tier = 1; tier <= 3; tier++) {
+            emcMachines.add(emcMachine("collector_mk" + tier, EmcMachineBlock.Kind.COLLECTOR, tier));
+            emcMachines.add(emcMachine("relay_mk" + tier, EmcMachineBlock.Kind.RELAY, tier));
+        }
+        EMC_MACHINE_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, PECore.id("emc_machine"),
+                new BlockEntityType<>(EmcMachineBlockEntity::new, emcMachines));
         MATTER_FURNACE_ENTITY = Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
                 ResourceKey.create(Registries.BLOCK_ENTITY_TYPE, PECore.id("matter_furnace")),
                 new BlockEntityType<>((pos, state) -> new MatterFurnaceBlockEntity(pos, state, state.getBlock() == redMatterFurnace),
@@ -132,13 +144,24 @@ public final class PERegistries {
         return item == ITEMS.get("black_hole_band");
     }
 
-    private static Block energyCondenser(String name, BlockBehaviour.Properties properties) {
-        ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, PECore.id(name));
+    private static void registerNova(String name, int radius) {
+        ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, PECore.id(name));
+        registerBlock(name, key, new NovaChargeBlock(BlockBehaviour.Properties.of().setId(key).instabreak(), radius),
+                Function.identity());
+    }
+
+    private static Block emcMachine(String name, EmcMachineBlock.Kind kind, int tier) {
+        ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, PECore.id(name));
+        Block block = new EmcMachineBlock(BlockBehaviour.Properties.of().setId(key).strength(3, 6), kind, tier);
+        return registerBlock(name, key, block, Function.identity());
+    }
+
+    private static Block registerBlock(String name, ResourceKey<Block> blockKey, Block block,
+                                       Function<Item.Properties, Item.Properties> itemProperties) {
         ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, PECore.id(name));
-        Block block = new EnergyCondenserBlock(properties.setId(blockKey));
         Registry.register(BuiltInRegistries.BLOCK, blockKey, block);
-        Registry.register(BuiltInRegistries.ITEM, itemKey, new BlockItem(block, new Item.Properties().setId(itemKey).useBlockDescriptionPrefix()));
-        energyCondenser = block;
+        Registry.register(BuiltInRegistries.ITEM, itemKey, new BlockItem(block,
+                itemProperties.apply(new Item.Properties().setId(itemKey).useBlockDescriptionPrefix())));
         BLOCKS.put(name, block);
         return block;
     }
@@ -165,6 +188,24 @@ public final class PERegistries {
         Item.Properties settings = properties.apply(new Item.Properties().setId(key));
         Item item;
         if (name.equals("philosophers_stone")) item = new PhilosophersStoneItem(settings);
+        else if (name.startsWith("klein_star_")) item = new KleinStarItem(settings, switch (name) {
+            case "klein_star_ein" -> 50_000;
+            case "klein_star_zwei" -> 200_000;
+            case "klein_star_drei" -> 800_000;
+            case "klein_star_vier" -> 3_200_000;
+            case "klein_star_sphere" -> 12_800_000;
+            case "klein_star_omega" -> 51_200_000;
+            default -> throw new IllegalArgumentException(name);
+        });
+        else if (name.endsWith("_alchemical_bag")) item = new AlchemicalBagItem(settings);
+        else if (name.equals("volcanite_amulet")) item = new VolcaniteAmuletItem(settings);
+        else if (name.startsWith("divining_rod_")) item = new UtilityPowerItem(settings, UtilityPowerItem.Power.DIVINING,
+                Integer.parseInt(name.substring(name.length() - 1)));
+        else if (utilityPower(name) != null) item = new UtilityPowerItem(settings, utilityPower(name), 0);
+        else if (name.equals("loot_ball")) item = new LootBallItem(settings);
+        else if (name.equals("destruction_catalyst")) item = new MiningPowerItem(settings, MiningPowerItem.Type.CATALYST);
+        else if (name.equals("hyperkinetic_lens")) item = new MiningPowerItem(settings, MiningPowerItem.Type.HYPERKINETIC);
+        else if (name.equals("catalytic_lens")) item = new MiningPowerItem(settings, MiningPowerItem.Type.CATALYTIC);
         else if (name.equals("evertide_amulet")) item = new EvertideAmuletItem(settings);
         else if (name.equals("swiftwolf_rending_gale")) item = new SwiftwolfRingItem(settings);
         else if (name.equals("arcana_ring")) item = new ClassicRingItem(settings, null);
@@ -181,6 +222,23 @@ public final class PERegistries {
         Registry.register(BuiltInRegistries.ITEM, key, item);
         ITEMS.put(name, item);
         return item;
+    }
+
+    private static UtilityPowerItem.Power utilityPower(String name) {
+        return switch (name) {
+            case "body_stone" -> UtilityPowerItem.Power.BODY;
+            case "soul_stone" -> UtilityPowerItem.Power.SOUL;
+            case "life_stone" -> UtilityPowerItem.Power.LIFE;
+            case "mind_stone" -> UtilityPowerItem.Power.MIND;
+            case "repair_talisman" -> UtilityPowerItem.Power.REPAIR;
+            case "watch_of_flowing_time" -> UtilityPowerItem.Power.WATCH;
+            case "archangel_smite" -> UtilityPowerItem.Power.ARCHANGEL;
+            case "mercurial_eye" -> UtilityPowerItem.Power.MERCURIAL;
+            case "gem_of_eternal_density" -> UtilityPowerItem.Power.DENSITY;
+            case "void_ring" -> UtilityPowerItem.Power.VOID;
+            case "tome" -> UtilityPowerItem.Power.TOME;
+            default -> null;
+        };
     }
 
     private static Block block(String name, BlockBehaviour.Properties properties) {

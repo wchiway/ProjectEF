@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "group": "projecte:tome",
+  "key": {
+    "B": "minecraft:book",
+    "H": "projecte:high_covalence_dust",
+    "K": "projecte:klein_star_omega",
+    "L": "projecte:low_covalence_dust",
+    "M": "projecte:medium_covalence_dust"
+  },
+  "pattern": [
+    "HML",
+    "KBK",
+    "LMH"
+  ],
+  "result": {
+    "count": 1,
+    "id": "projecte:tome"
+  }
+}

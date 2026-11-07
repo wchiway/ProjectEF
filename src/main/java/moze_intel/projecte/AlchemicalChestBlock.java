@@ -14,4 +14,13 @@ public final class AlchemicalChestBlock extends Block implements EntityBlock {
   if(!level.isClientSide()&&level.getBlockEntity(pos) instanceof MenuProvider menu)player.openMenu(menu);
   return InteractionResult.SUCCESS;
  }
+ @Override public <T extends BlockEntity> net.minecraft.world.level.block.entity.BlockEntityTicker<T> getTicker(
+        Level level, BlockState state, net.minecraft.world.level.block.entity.BlockEntityType<T> type) {
+  return level.isClientSide() ? null : (world, pos, blockState, entity) -> {
+   if (world.getGameTime() % 20 == Math.floorMod(pos.hashCode(), 20)
+           && entity instanceof AlchemicalChestBlockEntity chest && UtilityPowerItem.hasTalisman(chest)) {
+    UtilityPowerItem.repair(chest);
+   }
+  };
+ }
 }

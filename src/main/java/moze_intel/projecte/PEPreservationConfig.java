@@ -53,7 +53,7 @@ public final class PEPreservationConfig {
 
     /** Wear never identifies a learned item; purchases use its ordinary undamaged state. */
     public static net.minecraft.world.item.ItemStack withoutDurability(net.minecraft.world.item.ItemStack source) {
-        var stack = source.copyWithCount(1);
+        var stack = UtilityPowerItem.stripStoredValue(KleinStarItem.emptyCopy(source)).copyWithCount(1);
         restore(stack, new net.minecraft.world.item.ItemStack(source.getItem()),
                 net.minecraft.core.component.DataComponents.DAMAGE);
         return stack;
