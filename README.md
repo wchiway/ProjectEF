@@ -8,7 +8,7 @@ It is designed for **Minecraft 26.3** with **Fabric**. The goal is to make EMC u
 
 **1.1.33-fabric.26.3-preservation.2**
 
-[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.1.33-fabric.26.3-preservation.2.jar?raw=true)
+[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.9-fabric.26.3.jar?raw=true)
 
 Install Fabric Loader and Fabric API for Minecraft 26.3. Close Minecraft, remove
 any previous ProjectEF JAR, and place the downloaded JAR in `mods/`. Install the
