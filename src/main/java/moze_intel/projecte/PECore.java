@@ -47,6 +47,9 @@ public class PECore implements ModInitializer {
                     EvertideAmuletItem.action(player, packet.command(), hand);
                 } else if (player.getItemInHand(hand).getItem() instanceof VolcaniteAmuletItem) {
                     VolcaniteAmuletItem.action(player, packet.command(), hand);
+                } else if (player.getItemInHand(hand).getItem() instanceof MercurialEyeItem eye
+                        && eye.supportsControl(packet.command())) {
+                    MercurialEyeItem.action(player, packet.command(), hand);
                 } else if (player.getItemInHand(hand).getItem() instanceof ClassicRingItem) {
                     ClassicRingItem.action(player, packet.command(), hand);
                 } else if (GemArmorEffects.supportsControl(player, packet.command())) {

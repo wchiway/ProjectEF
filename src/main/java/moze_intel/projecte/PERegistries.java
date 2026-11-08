@@ -18,6 +18,7 @@ public final class PERegistries {
 
     public static net.minecraft.world.inventory.MenuType<TransmutationMenu> TRANSMUTATION_MENU;
     public static net.minecraft.world.inventory.MenuType<AlchemicalChestMenu> ALCHEMICAL_CHEST_MENU;
+    public static net.minecraft.world.inventory.MenuType<EmcMachineMenu> COLLECTOR_MENU, RELAY_MENU;
     public static net.minecraft.world.inventory.MenuType<CondenserMenu> CONDENSER_MENU;
     public static BlockEntityType<AlchemicalChestBlockEntity> ALCHEMICAL_CHEST_ENTITY;
     private static final Map<String, Item> ITEMS = new LinkedHashMap<>();
@@ -40,6 +41,10 @@ public final class PERegistries {
         ALCHEMICAL_CHEST_MENU = Registry.register(BuiltInRegistries.MENU, PECore.id("alchemical_chest"), new net.minecraft.world.inventory.MenuType<>(AlchemicalChestMenu::new, net.minecraft.world.flag.FeatureFlags.DEFAULT_FLAGS));
         CONDENSER_MENU = Registry.register(BuiltInRegistries.MENU, PECore.id("condenser"),
                 new net.minecraft.world.inventory.MenuType<>(CondenserMenu::new, net.minecraft.world.flag.FeatureFlags.DEFAULT_FLAGS));
+        COLLECTOR_MENU = Registry.register(BuiltInRegistries.MENU, PECore.id("collector"),
+                new net.minecraft.world.inventory.MenuType<>((id, inventory) -> new EmcMachineMenu(id, inventory, true), net.minecraft.world.flag.FeatureFlags.DEFAULT_FLAGS));
+        RELAY_MENU = Registry.register(BuiltInRegistries.MENU, PECore.id("relay"),
+                new net.minecraft.world.inventory.MenuType<>((id, inventory) -> new EmcMachineMenu(id, inventory, false), net.minecraft.world.flag.FeatureFlags.DEFAULT_FLAGS));
         registerItems();
         registerBlocks();
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, PECore.id("projectef"), net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab.builder()
@@ -202,6 +207,7 @@ public final class PERegistries {
         });
         else if (name.endsWith("_alchemical_bag")) item = new AlchemicalBagItem(settings);
         else if (name.equals("volcanite_amulet")) item = new VolcaniteAmuletItem(settings);
+        else if (name.equals("mercurial_eye")) item = new MercurialEyeItem(settings);
         else if (name.startsWith("divining_rod_")) item = new UtilityPowerItem(settings, UtilityPowerItem.Power.DIVINING,
                 Integer.parseInt(name.substring(name.length() - 1)));
         else if (utilityPower(name) != null) item = new UtilityPowerItem(settings, utilityPower(name), 0);
@@ -236,7 +242,6 @@ public final class PERegistries {
             case "repair_talisman" -> UtilityPowerItem.Power.REPAIR;
             case "watch_of_flowing_time" -> UtilityPowerItem.Power.WATCH;
             case "archangel_smite" -> UtilityPowerItem.Power.ARCHANGEL;
-            case "mercurial_eye" -> UtilityPowerItem.Power.MERCURIAL;
             case "gem_of_eternal_density" -> UtilityPowerItem.Power.DENSITY;
             case "void_ring" -> UtilityPowerItem.Power.VOID;
             case "tome" -> UtilityPowerItem.Power.TOME;

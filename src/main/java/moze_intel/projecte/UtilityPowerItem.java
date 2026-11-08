@@ -19,7 +19,6 @@ import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -29,11 +28,10 @@ import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 
 final class UtilityPowerItem extends Item {
     enum Power {
-        BODY, SOUL, LIFE, MIND, REPAIR, WATCH, ARCHANGEL, DIVINING, MERCURIAL, DENSITY, VOID, TOME
+        BODY, SOUL, LIFE, MIND, REPAIR, WATCH, ARCHANGEL, DIVINING, DENSITY, VOID, TOME
     }
 
     final Power power;
@@ -147,50 +145,33 @@ final class UtilityPowerItem extends Item {
 
     @Override
     public InteractionResult useOn(UseOnContext context) {
-        if (power != Power.DIVINING && power != Power.MERCURIAL) return InteractionResult.PASS;
+        if (power != Power.DIVINING) return InteractionResult.PASS;
         if (!(context.getPlayer() instanceof ServerPlayer player)) return InteractionResult.SUCCESS;
         if (!ClassicRingItem.canUse(player)) return InteractionResult.FAIL;
         var level = (ServerLevel) player.level();
         ItemStack stack = context.getItemInHand();
         if (player.getCooldowns().isOnCooldown(stack)) return InteractionResult.FAIL;
-        if (power == Power.DIVINING) {
-            long total = 0, greatest = 0;
-            int count = 0;
-            int depth = switch (tier) { case 1 -> 3; case 2 -> 16; default -> 64; };
-            Direction face = context.getClickedFace();
-            Direction x = face.getAxis() == Direction.Axis.X ? Direction.SOUTH : Direction.EAST;
-            Direction y = face.getAxis() == Direction.Axis.Y ? Direction.SOUTH : Direction.UP;
-            var prices = PEEmcOverrides.forPlayer(player);
-            for (int distance = 0; distance < depth; distance++) {
-                BlockPos plane = context.getClickedPos().relative(face.getOpposite(), distance);
-                for (int a = -1; a <= 1; a++) for (int b = -1; b <= 1; b++) {
-                    BlockPos pos = plane.relative(x, a).relative(y, b);
-                    if (!level.isLoaded(pos) || level.isOutsideBuildHeight(pos)) continue;
-                    long value = prices.value(BuiltInRegistries.BLOCK.getKey(level.getBlockState(pos).getBlock()).toString());
-                    if (value > 0) {
-                        count++;
-                        greatest = Math.max(greatest, value);
-                        total += Math.min(Long.MAX_VALUE - total, value);
-                    }
+        long total = 0, greatest = 0;
+        int count = 0;
+        int depth = switch (tier) { case 1 -> 3; case 2 -> 16; default -> 64; };
+        Direction face = context.getClickedFace();
+        Direction x = face.getAxis() == Direction.Axis.X ? Direction.SOUTH : Direction.EAST;
+        Direction y = face.getAxis() == Direction.Axis.Y ? Direction.SOUTH : Direction.UP;
+        var prices = PEEmcOverrides.forPlayer(player);
+        for (int distance = 0; distance < depth; distance++) {
+            BlockPos plane = context.getClickedPos().relative(face.getOpposite(), distance);
+            for (int a = -1; a <= 1; a++) for (int b = -1; b <= 1; b++) {
+                BlockPos pos = plane.relative(x, a).relative(y, b);
+                if (!level.isLoaded(pos) || level.isOutsideBuildHeight(pos)) continue;
+                long value = prices.value(BuiltInRegistries.BLOCK.getKey(level.getBlockState(pos).getBlock()).toString());
+                if (value > 0) {
+                    count++;
+                    greatest = Math.max(greatest, value);
+                    total += Math.min(Long.MAX_VALUE - total, value);
                 }
             }
-            PowerFuel.notice(player, "Average EMC " + (count == 0 ? 0 : total / count) + " · Highest " + greatest);
-        } else {
-            ItemStack material = player.getItemInHand(context.getHand() == InteractionHand.MAIN_HAND
-                    ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
-            BlockPos pos = context.getClickedPos().relative(context.getClickedFace());
-            if (!(material.getItem() instanceof BlockItem block)
-                    || !ClassicRingItem.canChange(level, player, stack, pos) || !level.getBlockState(pos).canBeReplaced()) {
-                return InteractionResult.FAIL;
-            }
-            var state = block.getBlock().defaultBlockState();
-            long price = PEEmcOverrides.forPlayer(player).value(new ItemStack(block));
-            if (price <= 0 || !state.canSurvive(level, pos) || !level.isUnobstructed(state, pos,
-                    net.minecraft.world.phys.shapes.CollisionContext.of(player)) || !PowerFuel.spend(player, price)) {
-                return InteractionResult.FAIL;
-            }
-            level.setBlockAndUpdate(pos, state);
         }
+        PowerFuel.notice(player, "Average EMC " + (count == 0 ? 0 : total / count) + " · Highest " + greatest);
         player.getCooldowns().addCooldown(stack, 10);
         return InteractionResult.SUCCESS;
     }
@@ -316,7 +297,6 @@ final class UtilityPowerItem extends Item {
             case MIND -> lines.accept(Component.literal("Sneak-use to store XP. Use to withdraw. " + data(stack).getIntOr("StoredXP", 0) + " XP"));
             case DENSITY, VOID -> lines.accept(Component.literal("Use with input in the other hand. Sneak-use to cycle target. " + DENSITY_TARGETS.get(mode(stack))));
             case WATCH, BODY, SOUL, LIFE -> lines.accept(Component.literal(active(stack) ? "Active" : "Inactive"));
-            case MERCURIAL -> lines.accept(Component.literal("Hold a building block in the other hand."));
             default -> { }
         }
     }

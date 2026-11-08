@@ -43,7 +43,6 @@ final class EmcMachineBlock extends BaseEntityBlock {
         if (player instanceof net.minecraft.server.level.ServerPlayer server
                 && level.getBlockEntity(pos) instanceof EmcMachineBlockEntity machine) {
             server.openMenu(machine);
-            if (kind != Kind.CONDENSER) PowerFuel.notice(server, machine.storedEmc() + " EMC stored");
         }
         return InteractionResult.SUCCESS;
     }

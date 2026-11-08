@@ -1,5 +1,6 @@
 package moze_intel.projecte;
 
+import java.util.function.BooleanSupplier;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -11,15 +12,32 @@ final class PowerFuel {
     private PowerFuel() { }
 
     static boolean spend(ServerPlayer player, long emc) {
-        if (player.getAbilities().instabuild || KleinStarItem.pay(player, emc)
-                || PETransmutationState.spendEmc(player, emc) || consumeSolidFuel(player, emc)) return true;
-        notice(player, "Needs " + emc + " EMC");
-        return false;
+        return spendIf(player, emc, () -> true) == SpendResult.APPLIED;
     }
 
-    private static boolean consumeSolidFuel(ServerPlayer player, long cost) {
+    enum SpendResult { APPLIED, SKIPPED, UNFUNDED }
+
+    static SpendResult spendIf(ServerPlayer player, long emc, BooleanSupplier apply) {
+        if (emc == 0 || player.getAbilities().instabuild) {
+            return apply.getAsBoolean() ? SpendResult.APPLIED : SpendResult.SKIPPED;
+        }
+        if (KleinStarItem.canPay(player, emc)) {
+            if (!apply.getAsBoolean()) return SpendResult.SKIPPED;
+            KleinStarItem.pay(player, emc);
+        } else if (PETransmutationState.balance(player) >= emc) {
+            if (!apply.getAsBoolean()) return SpendResult.SKIPPED;
+            PETransmutationState.spendEmc(player, emc);
+        } else {
+            var result = consumeSolidFuel(player, emc, apply);
+            if (result == SpendResult.UNFUNDED) notice(player, "Needs " + emc + " EMC");
+            return result;
+        }
+        return SpendResult.APPLIED;
+    }
+
+    private static SpendResult consumeSolidFuel(ServerPlayer player, long cost, BooleanSupplier apply) {
         // Large building costs are paid with stored EMC, keeping item fuel usage predictable.
-        if (cost > 1_024) return false;
+        if (cost > 1_024) return SpendResult.UNFUNDED;
         var inventory = player.getInventory();
         var prices = PEEmcOverrides.forPlayer(player);
         long remaining = cost;
@@ -37,12 +55,13 @@ final class PowerFuel {
             consume[slot] = (int) Math.min(stack.getCount(), 1 + (remaining - 1) / value);
             remaining -= value * consume[slot];
         }
-        if (remaining > 0) return false;
+        if (remaining > 0) return SpendResult.UNFUNDED;
+        if (!apply.getAsBoolean()) return SpendResult.SKIPPED;
         for (int slot = 0; slot < consume.length; slot++) {
             if (consume[slot] > 0) inventory.getItem(slot).shrink(consume[slot]);
         }
         inventory.setChanged();
-        return true;
+        return SpendResult.APPLIED;
     }
 
     static boolean consume(Player player, Item fuel, int count) {

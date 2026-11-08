@@ -108,7 +108,7 @@ public final class PETransmutationState extends SavedData {
     }
     /** Filled/explorer maps may be sold for map EMC, but only blank maps are learnable and purchasable. */
     public static boolean sellOnlyMap(ItemStack stack) {
-        return stack.is(Items.MAP) && stack.has(DataComponents.MAP_ID);
+        return stack.is(Items.FILLED_MAP) || stack.is(Items.MAP) && stack.has(DataComponents.MAP_ID);
     }
     private static PETransmutationState state(ServerPlayer player) {
         return player.level().getServer().overworld().getDataStorage().computeIfAbsent(TYPE);
@@ -130,7 +130,7 @@ public final class PETransmutationState extends SavedData {
         Set<ItemStack> variants = net.minecraft.world.item.ItemStackLinkedSet.createTypeAndComponentsSet();
         boolean changed = false;
         for (ItemStack saved : current.variants()) {
-            if (saved.isEmpty()) {
+            if (saved.isEmpty() || sellOnlyMap(saved)) {
                 changed = true;
                 continue;
             }
@@ -144,6 +144,7 @@ public final class PETransmutationState extends SavedData {
                 changed = true;
             }
         }
+        known.remove(BuiltInRegistries.ITEM.getKey(Items.FILLED_MAP).toString());
         known.removeIf(PEEmcBlacklist::contains);
         List<String> learned = List.copyOf(known);
         if (!learned.equals(current.learned())) changed = true;
@@ -156,7 +157,7 @@ public final class PETransmutationState extends SavedData {
         var prices = PEEmcOverrides.forPlayer(player);
         for (var item : BuiltInRegistries.ITEM) {
             String id = BuiltInRegistries.ITEM.getKey(item).toString();
-            if (prices.value(id) > 0) known.add(id);
+            if (item != Items.FILLED_MAP && prices.value(id) > 0) known.add(id);
         }
         if (known.size() == account.learned().size()) return false;
         state.update(player, new Account(account.balance(), List.copyOf(known), account.variants(), account.favorites()));
@@ -249,7 +250,7 @@ public final class PETransmutationState extends SavedData {
                 catch (NumberFormatException exception) { return; }
                 if (index < 0 || index >= current.variants().size()) return;
                 exemplar = PEPreservationConfig.exemplar(current.variants().get(index));
-                if (containsStoredItems(exemplar) || sellOnlyMap(exemplar)) return;
+                if (containsStoredItems(exemplar)) return;
             } else {
                 if (!current.learned().contains(request.item())) return;
                 Item item;
@@ -258,7 +259,7 @@ public final class PETransmutationState extends SavedData {
                 if (item == Items.AIR) return;
                 exemplar = new ItemStack(item);
             }
-            if (PEEmcBlacklist.contains(exemplar)) return;
+            if (PEEmcBlacklist.contains(exemplar) || sellOnlyMap(exemplar)) return;
             long unit = PEEmcOverrides.forPlayer(player).value(exemplar);
             int quantity = Math.min(Math.max(1, Math.min(request.count(), 64)), exemplar.getMaxStackSize());
             if (unit <= 0) return;

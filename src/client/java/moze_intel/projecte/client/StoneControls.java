@@ -54,6 +54,7 @@ public final class StoneControls {
   return item instanceof PhilosophersStoneItem && command < 5
           || item instanceof VolcaniteAmuletItem && command <= 2
           || item instanceof EvertideAmuletItem && command <= 3
+          || item instanceof MercurialEyeItem eye && eye.supportsControl(command)
           || item instanceof ClassicRingItem ring && ring.supportsControl(command);
  }
 }

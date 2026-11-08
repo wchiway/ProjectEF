@@ -2,6 +2,7 @@ package moze_intel.projecte.mixin;
 
 import moze_intel.projecte.PhilosophersStoneItem;
 import moze_intel.projecte.EvertideAmuletItem;
+import moze_intel.projecte.VolcaniteAmuletItem;
 import moze_intel.projecte.ClassicRingItem;
 import moze_intel.projecte.PECore;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -22,12 +23,18 @@ public interface StoneCraftingRemainderMixin {
  }
 
  @Inject(method="getRemainingItems",at=@At("RETURN"))
- private void projecte$returnRingCatalysts(CraftingInput input,CallbackInfoReturnable<NonNullList<ItemStack>> ci) {
-  if (input.items().stream().noneMatch(stack -> stack.getItem() instanceof ClassicRingItem)) return;
+ private void projecte$returnRecipeCatalysts(CraftingInput input,CallbackInfoReturnable<NonNullList<ItemStack>> ci) {
+  if (input.items().stream().noneMatch(stack -> stack.getItem() instanceof ClassicRingItem
+          || stack.getItem() instanceof VolcaniteAmuletItem)) return;
   ItemStack output = ((CraftingRecipe) this).assemble(input);
-  boolean arcana = BuiltInRegistries.ITEM.getKey(output.getItem()).equals(PECore.id("arcana_ring"));
+  var outputId = BuiltInRegistries.ITEM.getKey(output.getItem());
+  boolean arcana = outputId.equals(PECore.id("arcana_ring"));
+  boolean usesLava = output.is(Items.LAVA_BUCKET) || outputId.equals(PECore.id("iron_band"));
   for (int i = 0; i < input.size(); i++) {
    ItemStack stack = input.getItem(i);
+   if (stack.getItem() instanceof VolcaniteAmuletItem && usesLava) {
+    ci.getReturnValue().set(i, stack.copyWithCount(1));
+   }
    if (!(stack.getItem() instanceof ClassicRingItem)) continue;
    var id = BuiltInRegistries.ITEM.getKey(stack.getItem());
    boolean zero = id.equals(PECore.id("zero_ring"));

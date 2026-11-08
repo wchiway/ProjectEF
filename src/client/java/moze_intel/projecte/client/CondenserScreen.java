@@ -32,7 +32,9 @@ final class CondenserScreen extends AbstractContainerScreen<CondenserMenu> {
             graphics.fillGradient(barLeft + 2, barTop + 2, barLeft + 2 + filled, barTop + BAR_HEIGHT - 2,
                     0xfffff1a5, 0xffdba53e);
         }
-        graphics.text(font, Long.toString(emc), leftPos + 144, topPos + 11, TEXT, false);
+        String amount = Long.toString(emc);
+        if (font.width(amount) > 61) amount = font.plainSubstrByWidth(amount, 54) + "…";
+        graphics.text(font, amount, leftPos + 144, topPos + 11, TEXT, false);
         drawHint(graphics, menu.accountSlot(), "↓");
         drawHint(graphics, menu.starSlot(), "✦");
         super.extractContents(graphics, mouseX, mouseY, partialTick);
@@ -78,7 +80,7 @@ final class CondenserScreen extends AbstractContainerScreen<CondenserMenu> {
         graphics.setTooltipForNextFrame(font, Component.literal(text), x, y);
     }
 
-    private static void panel(GuiGraphicsExtractor graphics, int x, int y, int width, int height,
+    static void panel(GuiGraphicsExtractor graphics, int x, int y, int width, int height,
                               int base, int topLeft, int bottomRight) {
         graphics.fill(x, y, x + width, y + height, base);
         graphics.fill(x, y, x + width, y + 1, topLeft);

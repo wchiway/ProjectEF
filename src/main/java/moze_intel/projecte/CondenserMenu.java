@@ -1,13 +1,10 @@
 package moze_intel.projecte;
 
-import java.util.function.LongSupplier;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.DataSlot;
-import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
@@ -23,24 +20,22 @@ public final class CondenserMenu extends AbstractContainerMenu {
     private static final int ACCOUNT = 2;
     private static final int GRID_START = 3;
     private static final int PLAYER_START = GRID_START + GRID_SIZE;
-    private static final int LONG_PARTS = 4;
     private final Container container;
-    private final SimpleContainerData values = new SimpleContainerData(2 * LONG_PARTS);
+    private final EmcMenuData values;
 
     public CondenserMenu(int id, Inventory inventory) {
-        this(id, inventory, new SimpleContainer(GRID_START + GRID_SIZE));
-        addDataSlots(values);
+        this(id, inventory, new SimpleContainer(GRID_START + GRID_SIZE), new EmcMenuData(2));
     }
 
     CondenserMenu(int id, Inventory inventory, EmcMachineBlockEntity machine) {
-        this(id, inventory, (Container) machine);
-        addLong(machine::storedEmc);
-        addLong(machine::condenserTargetEmc);
+        this(id, inventory, machine, new EmcMenuData(machine::storedEmc, machine::condenserTargetEmc));
     }
 
-    private CondenserMenu(int id, Inventory inventory, Container container) {
+    private CondenserMenu(int id, Inventory inventory, Container container, EmcMenuData values) {
         super(PERegistries.CONDENSER_MENU, id);
         this.container = container;
+        this.values = values;
+        addDataSlots(values);
         addSlot(new MachineSlot(container, EmcMachineBlockEntity.TARGET, 12, 7));
         addSlot(new MachineSlot(container, EmcMachineBlockEntity.STAR, 227, 7));
         addSlot(new MachineSlot(container, EmcMachineBlockEntity.INPUT, 207, 7));
@@ -51,28 +46,9 @@ public final class CondenserMenu extends AbstractContainerMenu {
         addStandardInventorySlots(inventory, 48, 156);
     }
 
-    private void addLong(LongSupplier supplier) {
-        // Container data packets carry signed 16-bit values.
-        for (int part = 0; part < LONG_PARTS; part++) {
-            int shift = part * Short.SIZE;
-            addDataSlot(new DataSlot() {
-                @Override public int get() { return (short) (supplier.getAsLong() >>> shift); }
-                @Override public void set(int value) { }
-            });
-        }
-    }
+    public long storedEmc() { return values.value(0); }
 
-    private long readLong(int start) {
-        long value = 0;
-        for (int part = 0; part < LONG_PARTS; part++) {
-            value |= (values.get(start + part) & 0xffffL) << (part * Short.SIZE);
-        }
-        return value;
-    }
-
-    public long storedEmc() { return readLong(0); }
-
-    public long targetEmc() { return readLong(LONG_PARTS); }
+    public long targetEmc() { return values.value(1); }
 
     public Slot targetSlot() { return slots.get(TARGET); }
 

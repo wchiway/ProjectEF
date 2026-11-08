@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -16,14 +17,17 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.TntBlock;
+import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 public final class ClassicExpansionTests {
@@ -110,7 +114,7 @@ public final class ClassicExpansionTests {
         var machine = placeMachine(helper, pos, "energy_condenser");
         var player = player(helper);
         var saved = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, level.registryAccess());
-        saved.putLong("emc", 49_876_543);
+        saved.putLong("emc", 4_345_678_901L);
         saved.store("slot_2", ItemStack.CODEC, item("klein_star_omega"));
         machine.loadCustomOnly(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), saved.buildResult()));
 
@@ -124,9 +128,184 @@ public final class ClassicExpansionTests {
             }
         });
         server.broadcastChanges();
-        helper.assertTrue(client.storedEmc() == 49_876_543 && client.targetEmc() == machine.condenserTargetEmc(),
+        helper.assertTrue(client.storedEmc() == 4_345_678_901L && client.targetEmc() == machine.condenserTargetEmc(),
                 "The EMC bar receives the exact buffer and target price through 16-bit menu fields");
         helper.succeed();
+    }
+
+    @GameTest
+    public void condenserMakesTargetsAboveItsOldCapacity(GameTestHelper helper) {
+        var level = helper.getLevel();
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 2, 1));
+        var machine = placeMachine(helper, pos, "energy_condenser");
+        var player = player(helper);
+        machine.bind(player.getUUID());
+        ItemStack tome = item("tome");
+        long cost = PEEmcOverrides.forPlayer(player).value(tome);
+        helper.assertTrue(cost > 64_000_000, "The Tome costs more than the previous condenser limit");
+        var saved = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, level.registryAccess());
+        saved.putLong("emc", cost - 1);
+        saved.store("slot_2", ItemStack.CODEC, tome);
+        saved.store("slot_0", ItemStack.CODEC, new ItemStack(Items.DIRT));
+        machine.loadCustomOnly(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), saved.buildResult()));
+
+        EmcMachineBlockEntity.tick(level, pos, machine.getBlockState(), machine);
+        helper.assertTrue(machine.getItem(EmcMachineBlockEntity.OUTPUT).is(tome.getItem())
+                        && machine.getItem(EmcMachineBlockEntity.TARGET).getCount() == 1
+                        && machine.storedEmc() == 0,
+                "Fuel completes the Tome's price, leaves the template intact and charges the full cost");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void collectorsAndRelaysOpenMachineMenus(GameTestHelper helper) {
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 2, 1));
+        var player = player(helper);
+        var collector = placeMachine(helper, pos, "collector_mk1");
+        var relay = placeMachine(helper, pos.east(), "relay_mk1");
+        ItemStack fuel = new ItemStack(Items.CHARCOAL);
+        ItemStack star = item("klein_star_ein");
+
+        collector.setItem(EmcMachineBlockEntity.TARGET, new ItemStack(Items.DIRT));
+        player.openMenu(collector);
+        var menu = (EmcMachineMenu) player.containerMenu;
+        helper.assertTrue(menu.isCollector() && menu.slots.size() == 41
+                        && menu.capacity() == collector.capacity() && menu.lightLevel() == collector.lightLevel()
+                        && menu.getSlot(0).mayPlace(fuel) && menu.getSlot(1).mayPlace(star)
+                        && !menu.getSlot(2).mayPlace(fuel),
+                "Collector opens with live data and filtered fuel, Star and output slots");
+        menu.getSlot(5).set(star.copy());
+        menu.quickMoveStack(player, 5);
+        helper.assertTrue(collector.getItem(EmcMachineBlockEntity.STAR).is(star.getItem()) && !menu.getSlot(5).hasItem(),
+                "Shift-click routes a Klein Star into the collector's charging slot");
+        var legacy = menu.getSlot(3);
+        helper.assertTrue(legacy.isActive() && !legacy.mayPlace(fuel) && legacy.getItem().is(Items.DIRT),
+                "The old HopperMenu slot remains visible while it contains saved items");
+        menu.quickMoveStack(player, 3);
+        helper.assertTrue(!legacy.isActive() && player.getInventory().contains(new ItemStack(Items.DIRT)),
+                "Players can reclaim items left in old slots");
+        player.closeContainer();
+
+        player.openMenu(relay);
+        menu = (EmcMachineMenu) player.containerMenu;
+        helper.assertTrue(!menu.isCollector() && menu.slots.size() == 41 && menu.capacity() == relay.capacity()
+                        && menu.getSlot(0).mayPlace(fuel) && menu.getSlot(1).mayPlace(star),
+                "Relay opens with burn input, charging slot and EMC capacity");
+        player.closeContainer();
+        helper.succeed();
+    }
+
+    @GameTest
+    public void filledMapsSellWithoutLearning(GameTestHelper helper) {
+        var player = player(helper);
+        var map = new ItemStack(Items.FILLED_MAP);
+        map.set(DataComponents.MAP_ID, new MapId(42));
+        long price = PEEmcOverrides.forPlayer(player).value(new ItemStack(Items.MAP));
+        PETransmutationState.deposit(helper.getLevel().getServer(), player.getUUID(), 1, 1);
+        PETransmutationState.sellStack(player, map, 1);
+        helper.assertTrue(price > 0 && map.isEmpty() && PETransmutationState.balance(player) == price + 1
+                        && PETransmutationState.knowledgeRevision(player) == 0,
+                "A filled map sells at the blank-map price and does not teach a map");
+        var blank = new ItemStack(Items.MAP);
+        PETransmutationState.sellStack(player, blank, 1);
+        helper.assertTrue(blank.isEmpty() && PETransmutationState.balance(player) == 2 * price + 1
+                        && PETransmutationState.knowledgeRevision(player) == 1,
+                "A blank map can still be learned");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void lavaBucketCraftReturnsVolcaniteAmulet(GameTestHelper helper) {
+        ItemStack amulet = item("volcanite_amulet");
+        amulet.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("My Amulet"));
+        var input = CraftingInput.of(3, 1, List.of(amulet, new ItemStack(Items.BUCKET), new ItemStack(Items.REDSTONE)));
+        var recipe = recipe(helper, "conversions/redstone_to_lava");
+        var remainder = recipe.getRemainingItems(input);
+        helper.assertTrue(recipe.matches(input, helper.getLevel()) && recipe.assemble(input).is(Items.LAVA_BUCKET)
+                        && ItemStack.matches(remainder.getFirst(), amulet) && remainder.get(1).isEmpty(),
+                "Crafting a lava bucket consumes the bucket and preserves the named amulet");
+        ItemStack omega = item("klein_star_omega");
+        ((KleinStarItem) omega.getItem()).charge(omega, Long.MAX_VALUE);
+        var armorInput = CraftingInput.of(2, 2, List.of(item("rm_chestplate"), amulet, item("body_stone"), omega));
+        var armorRecipe = recipe(helper, "gem_chestplate");
+        helper.assertTrue(armorRecipe.matches(armorInput, helper.getLevel())
+                        && armorRecipe.getRemainingItems(armorInput).get(1).isEmpty(),
+                "The Gem Chestplate still consumes its amulet ingredient");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void mercurialEyeExtendsAndTransmutesAtTheExpectedCost(GameTestHelper helper) {
+        var player = player(helper);
+        var level = helper.getLevel();
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 2, 2));
+        ItemStack eye = item("mercurial_eye");
+        ItemStack sample = new ItemStack(Items.STONE);
+        player.setItemInHand(InteractionHand.MAIN_HAND, eye);
+        player.setItemInHand(InteractionHand.OFF_HAND, sample);
+        var prices = PEEmcOverrides.forPlayer(player);
+        long stone = prices.value(sample);
+        long obsidian = prices.value(new ItemStack(Items.OBSIDIAN));
+        level.setBlockAndUpdate(pos, Blocks.DIRT.defaultBlockState());
+        level.setBlockAndUpdate(pos.above().east(), Blocks.CHEST.defaultBlockState());
+        PETransmutationState.deposit(level.getServer(), player.getUUID(), 8 * stone, 1);
+        MercurialEyeItem.action(player, 4, InteractionHand.MAIN_HAND);
+        MercurialEyeItem.action(player, 0, InteractionHand.MAIN_HAND);
+        useEye(player, eye, pos, Direction.UP);
+
+        int placed = 0;
+        for (BlockPos plane : BlockPos.spiralAround(pos.above(), 1, Direction.EAST, Direction.SOUTH)) {
+            if (level.getBlockState(plane).is(Blocks.STONE)) placed++;
+        }
+        helper.assertTrue(placed == 8 && level.getBlockState(pos.above().east()).is(Blocks.CHEST)
+                        && sample.getCount() == 1 && PETransmutationState.balance(player) == 0,
+                "Extension places a 3×3 plane, skips the chest and charges for eight blocks");
+
+        MercurialEyeItem.action(player, 4, InteractionHand.MAIN_HAND);
+        player.getCooldowns().removeCooldown(PECore.id("mercurial_eye"));
+        player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.OBSIDIAN));
+        PETransmutationState.deposit(level.getServer(), player.getUUID(), obsidian - stone, 1);
+        useEye(player, eye, pos.above(), Direction.UP);
+        helper.assertTrue(level.getBlockState(pos.above()).is(Blocks.OBSIDIAN)
+                        && level.getBlockState(pos.above().west()).is(Blocks.STONE)
+                        && PETransmutationState.balance(player) == 0,
+                "Transmutation starts at the clicked block and stops when the price difference cannot be paid");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void mercurialEyeCreatesSingleBlocksAndPillars(GameTestHelper helper) {
+        var player = player(helper);
+        var level = helper.getLevel();
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 2, 2));
+        ItemStack eye = item("mercurial_eye");
+        ItemStack sample = new ItemStack(Items.STONE);
+        player.setItemInHand(InteractionHand.MAIN_HAND, eye);
+        player.setItemInHand(InteractionHand.OFF_HAND, sample);
+        long stone = PEEmcOverrides.forPlayer(player).value(sample);
+        PETransmutationState.deposit(level.getServer(), player.getUUID(), 27 * stone, 1);
+        level.setBlockAndUpdate(pos, Blocks.DIRT.defaultBlockState());
+
+        useEye(player, eye, pos, Direction.UP);
+        helper.assertTrue(level.getBlockState(pos.above()).is(Blocks.STONE)
+                        && level.isEmptyBlock(pos.above().east()) && PETransmutationState.balance(player) == 26 * stone,
+                "An Eye with default components keeps single-block placement");
+
+        player.getCooldowns().removeCooldown(PECore.id("mercurial_eye"));
+        for (int i = 0; i < 3; i++) MercurialEyeItem.action(player, 4, InteractionHand.MAIN_HAND);
+        useEye(player, eye, pos, Direction.UP);
+        for (BlockPos pillar : BlockPos.betweenClosed(pos.offset(-1, 1, -1), pos.offset(1, 3, 1))) {
+            helper.assertTrue(level.getBlockState(pillar).is(Blocks.STONE), "Pillar fills a 3×3×3 volume");
+        }
+        helper.assertTrue(level.isEmptyBlock(pos.above(4)) && PETransmutationState.balance(player) == 0
+                        && sample.getCount() == 1,
+                "Pillar leaves the pre-existing block and sample intact and charges only for the gaps");
+        helper.succeed();
+    }
+
+    private static void useEye(ServerPlayer player, ItemStack eye, BlockPos pos, Direction face) {
+        var hit = new BlockHitResult(Vec3.atCenterOf(pos), face, pos, false);
+        eye.getItem().useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
     }
 
     @GameTest

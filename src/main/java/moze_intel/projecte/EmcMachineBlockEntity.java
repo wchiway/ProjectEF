@@ -14,7 +14,6 @@ import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.HopperMenu;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -52,14 +51,22 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
         capacity = switch (kind) {
             case COLLECTOR -> COLLECTOR_CAPACITIES[tier];
             case RELAY -> RELAY_CAPACITIES[tier];
-            case CONDENSER -> 64_000_000;
+            case CONDENSER -> Long.MAX_VALUE;
         };
     }
 
     long storedEmc() { return emc; }
 
     long condenserTargetEmc() {
-        return level instanceof ServerLevel server ? price(server, new ItemStack(items[TARGET].getItem())) : 0;
+        ItemStack target = items[TARGET];
+        return level instanceof ServerLevel server && !PETransmutationState.sellOnlyMap(target)
+                ? price(server, new ItemStack(target.getItem())) : 0;
+    }
+
+    long capacity() { return capacity; }
+
+    int lightLevel() {
+        return level == null ? 0 : level.getMaxLocalRawBrightness(worldPosition.above());
     }
 
     void bind(UUID placer) {
@@ -76,7 +83,7 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
 
         if (machine.kind == EmcMachineBlock.Kind.COLLECTOR) {
             if (level.getGameTime() % 20 == Math.floorMod(pos.hashCode(), 20)) {
-                int light = level.getMaxLocalRawBrightness(pos.above());
+                int light = machine.lightLevel();
                 machine.accept(RATES[machine.tier] * light / 15);
             }
             machine.upgradeFuel(server);
@@ -101,8 +108,8 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
             return;
         }
         ItemStack result = new ItemStack(template.getItem());
-        long unit = price(level, result);
-        if (unit <= 0 || unit > capacity) return;
+        long unit = condenserTargetEmc();
+        if (unit <= 0) return;
         if (input.is(result.getItem()) || !burnFuel(level, input)) {
             for (int slot : CONDENSER_GRID) {
                 ItemStack stack = items[slot];
@@ -250,7 +257,8 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
             case INPUT -> kind == EmcMachineBlock.Kind.COLLECTOR ? nextFuel(stack) != null
                     : stack.getItem() instanceof KleinStarItem || price(server, stack) > 0;
             case STAR -> stack.getItem() instanceof KleinStarItem;
-            case TARGET -> kind == EmcMachineBlock.Kind.CONDENSER && price(server, new ItemStack(stack.getItem())) > 0
+            case TARGET -> kind == EmcMachineBlock.Kind.CONDENSER && !PETransmutationState.sellOnlyMap(stack)
+                    && price(server, new ItemStack(stack.getItem())) > 0
                     && ItemStack.isSameItemSameComponents(stack, new ItemStack(stack.getItem()));
             default -> false;
         };
@@ -276,7 +284,11 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
         return Component.translatable(getBlockState().getBlock().getDescriptionId());
     }
     @Override public AbstractContainerMenu createMenu(int id, Inventory inventory, Player player) {
-        return kind == EmcMachineBlock.Kind.CONDENSER ? new CondenserMenu(id, inventory, this) : new HopperMenu(id, inventory, this);
+        return switch (kind) {
+            case CONDENSER -> new CondenserMenu(id, inventory, this);
+            case COLLECTOR -> new EmcMachineMenu(id, inventory, this, true);
+            case RELAY -> new EmcMachineMenu(id, inventory, this, false);
+        };
     }
 
     @Override
