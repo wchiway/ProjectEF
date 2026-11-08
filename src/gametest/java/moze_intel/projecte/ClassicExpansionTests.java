@@ -65,6 +65,71 @@ public final class ClassicExpansionTests {
     }
 
     @GameTest
+    public void condenserMenuUsesSharedGridAndPreservesOldInventory(GameTestHelper helper) {
+        var level = helper.getLevel();
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 2, 1));
+        var machine = placeMachine(helper, pos, "energy_condenser");
+        var player = player(helper);
+        machine.bind(player.getUUID());
+        var saved = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, level.registryAccess());
+        saved.putLong("emc", PEEmcOverrides.forPlayer(player).value(new ItemStack(Items.DIAMOND)) - 1);
+        saved.store("slot_2", ItemStack.CODEC, new ItemStack(Items.DIAMOND));
+        saved.store("slot_3", ItemStack.CODEC, new ItemStack(Items.DIAMOND, 3));
+        machine.loadCustomOnly(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), saved.buildResult()));
+
+        player.openMenu(machine);
+        var menu = (CondenserMenu) player.containerMenu;
+        helper.assertTrue(menu.slots.size() == 3 + 91 + 36 && menu.targetSlot().getItem().is(Items.DIAMOND)
+                        && menu.getSlot(3).getItem().getCount() == 3,
+                "The 91-slot condenser menu opens with the existing target and output in their expected slots");
+
+        var last = menu.getSlot(3 + 90);
+        last.set(new ItemStack(Items.DIRT, 2));
+        EmcMachineBlockEntity.tick(level, pos, machine.getBlockState(), machine);
+        helper.assertTrue(last.getItem().getCount() == 1 && menu.getSlot(3).getItem().getCount() == 4
+                        && menu.targetSlot().getItem().getCount() == 1,
+                "Fuel from the last grid slot makes another target item without burning existing copies");
+        int fuelSlot = last.getContainerSlot();
+        int productSlot = menu.getSlot(3).getContainerSlot();
+        helper.assertTrue(!machine.canTakeItemThroughFace(fuelSlot, last.getItem(), net.minecraft.core.Direction.DOWN)
+                        && machine.canTakeItemThroughFace(productSlot, menu.getSlot(3).getItem(), net.minecraft.core.Direction.DOWN),
+                "Hoppers pull produced items and leave fuel while a target is set");
+
+        menu.targetSlot().set(ItemStack.EMPTY);
+        EmcMachineBlockEntity.tick(level, pos, machine.getBlockState(), machine);
+        helper.assertTrue(last.getItem().getCount() == 1 && menu.getSlot(3).getItem().getCount() == 4,
+                "Clearing the target leaves fuel and products untouched in the shared grid");
+        player.closeContainer();
+        helper.succeed();
+    }
+
+    @GameTest
+    public void condenserMenuSyncsFullEmcValues(GameTestHelper helper) {
+        var level = helper.getLevel();
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 2, 1));
+        var machine = placeMachine(helper, pos, "energy_condenser");
+        var player = player(helper);
+        var saved = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, level.registryAccess());
+        saved.putLong("emc", 49_876_543);
+        saved.store("slot_2", ItemStack.CODEC, item("klein_star_omega"));
+        machine.loadCustomOnly(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), saved.buildResult()));
+
+        var server = new CondenserMenu(1, player.getInventory(), machine);
+        var client = new CondenserMenu(1, player.getInventory());
+        server.addSlotListener(new net.minecraft.world.inventory.ContainerListener() {
+            @Override public void slotChanged(net.minecraft.world.inventory.AbstractContainerMenu menu, int index, ItemStack stack) { }
+
+            @Override public void dataChanged(net.minecraft.world.inventory.AbstractContainerMenu menu, int index, int value) {
+                client.setData(index, (short) value);
+            }
+        });
+        server.broadcastChanges();
+        helper.assertTrue(client.storedEmc() == 49_876_543 && client.targetEmc() == machine.condenserTargetEmc(),
+                "The EMC bar receives the exact buffer and target price through 16-bit menu fields");
+        helper.succeed();
+    }
+
+    @GameTest
     public void kleinStarsTransferChargeWithoutCopyingIt(GameTestHelper helper) {
         var level = helper.getLevel();
         var player = player(helper);

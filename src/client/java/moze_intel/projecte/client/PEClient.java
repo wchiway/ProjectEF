@@ -15,6 +15,7 @@ public class PEClient implements ClientModInitializer {
                 DarkMatterPedestalRenderer::new);
         net.minecraft.client.gui.screens.MenuScreens.register(PERegistries.ALCHEMICAL_CHEST_MENU, AlchemicalChestScreen::new);
         net.minecraft.client.gui.screens.MenuScreens.register(PERegistries.TRANSMUTATION_MENU, TransmutationScreen::new);
+        net.minecraft.client.gui.screens.MenuScreens.register(PERegistries.CONDENSER_MENU, CondenserScreen::new);
         ClientPlayNetworking.registerGlobalReceiver(PEPackets.Snapshot.TYPE, (packet, context) ->
                 context.client().execute(() ->
                         { if (context.client().gui.screen() instanceof TransmutationScreen screen) screen.update(packet); }));

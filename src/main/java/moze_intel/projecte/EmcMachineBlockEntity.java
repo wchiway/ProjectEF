@@ -29,11 +29,12 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
     private static final int[] INSERT = {INPUT};
     private static final int[] EXTRACT = {OUTPUT};
     private static final int[] COLLECT = {INPUT, OUTPUT};
+    private static final int[] CONDENSER_GRID = java.util.stream.IntStream.range(OUTPUT, OUTPUT + CondenserMenu.GRID_SIZE).toArray();
     private static final int[] RATES = {4, 12, 40};
     private static final int[] TRANSFER = {64, 192, 640};
     private static final long[] COLLECTOR_CAPACITIES = {10_000, 30_000, 60_000};
     private static final long[] RELAY_CAPACITIES = {100_000, 1_000_000, 10_000_000};
-    private final ItemStack[] items = {ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY};
+    private final ItemStack[] items;
     private final EmcMachineBlock.Kind kind;
     private final int tier;
     private final long capacity;
@@ -45,6 +46,8 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
                 ? PERegistries.ENERGY_CONDENSER_ENTITY : PERegistries.EMC_MACHINE_ENTITY, pos, state);
         var block = (EmcMachineBlock) state.getBlock();
         kind = block.kind;
+        items = new ItemStack[kind == EmcMachineBlock.Kind.CONDENSER ? OUTPUT + CondenserMenu.GRID_SIZE : 5];
+        java.util.Arrays.fill(items, ItemStack.EMPTY);
         tier = block.tier - 1;
         capacity = switch (kind) {
             case COLLECTOR -> COLLECTOR_CAPACITIES[tier];
@@ -54,6 +57,10 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
     }
 
     long storedEmc() { return emc; }
+
+    long condenserTargetEmc() {
+        return level instanceof ServerLevel server ? price(server, new ItemStack(items[TARGET].getItem())) : 0;
+    }
 
     void bind(UUID placer) {
         if (owner == null) {
@@ -93,22 +100,48 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
             }
             return;
         }
-        burnFuel(level);
         ItemStack result = new ItemStack(template.getItem());
         long unit = price(level, result);
-        if (unit > 0 && emc >= unit && addOutput(result)) spend(unit);
+        if (unit <= 0 || unit > capacity) return;
+        if (input.is(result.getItem()) || !burnFuel(level, input)) {
+            for (int slot : CONDENSER_GRID) {
+                ItemStack stack = items[slot];
+                if (!stack.is(result.getItem()) && burnFuel(level, stack)) break;
+            }
+        }
+        if (emc >= unit && addCondenserOutput(result)) spend(unit);
     }
 
     private void burnFuel(ServerLevel level) {
-        ItemStack input = items[INPUT];
+        burnFuel(level, items[INPUT]);
+    }
+
+    private boolean burnFuel(ServerLevel level, ItemStack input) {
         if (input.getItem() instanceof KleinStarItem star) {
-            accept(star.drain(input, Math.min(capacity - emc, TRANSFER[tier])));
-            return;
+            return accept(star.drain(input, Math.min(capacity - emc, TRANSFER[tier]))) > 0;
         }
         long value = price(level, input);
-        if (value <= 0 || value > capacity - emc) return;
+        if (value <= 0 || value > capacity - emc) return false;
         accept(value);
         input.shrink(1);
+        return true;
+    }
+
+    private boolean addCondenserOutput(ItemStack result) {
+        int free = -1;
+        for (int slot : CONDENSER_GRID) {
+            ItemStack stack = items[slot];
+            if (stack.isEmpty()) {
+                if (free == -1) free = slot;
+            } else if (ItemStack.isSameItemSameComponents(stack, result) && stack.getCount() < stack.getMaxStackSize()) {
+                stack.grow(1);
+                setChanged();
+                return true;
+            }
+        }
+        if (free == -1) return false;
+        setItem(free, result);
+        return true;
     }
 
     private void upgradeFuel(ServerLevel level) {
@@ -210,6 +243,9 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
     }
     @Override public boolean canPlaceItem(int slot, ItemStack stack) {
         if (!(level instanceof ServerLevel server)) return false;
+        if (kind == EmcMachineBlock.Kind.CONDENSER && slot >= OUTPUT && slot < items.length) {
+            return stack.getItem() instanceof KleinStarItem || price(server, stack) > 0;
+        }
         return switch (slot) {
             case INPUT -> kind == EmcMachineBlock.Kind.COLLECTOR ? nextFuel(stack) != null
                     : stack.getItem() instanceof KleinStarItem || price(server, stack) > 0;
@@ -220,18 +256,27 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
         };
     }
     @Override public int[] getSlotsForFace(Direction side) {
+        if (kind == EmcMachineBlock.Kind.CONDENSER && (side == Direction.DOWN || !items[TARGET].isEmpty())) {
+            return CONDENSER_GRID;
+        }
         return side == Direction.DOWN ? EXTRACT : side == Direction.UP ? INSERT : COLLECT;
     }
     @Override public boolean canPlaceItemThroughFace(int slot, ItemStack stack, Direction side) {
-        return slot == INPUT && side != Direction.DOWN && canPlaceItem(slot, stack);
+        if (side == Direction.DOWN || !canPlaceItem(slot, stack)) return false;
+        if (kind != EmcMachineBlock.Kind.CONDENSER || items[TARGET].isEmpty()) return slot == INPUT;
+        return slot >= OUTPUT && !stack.is(items[TARGET].getItem());
     }
-    @Override public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction side) { return slot == OUTPUT; }
+    @Override public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction side) {
+        if (kind != EmcMachineBlock.Kind.CONDENSER) return slot == OUTPUT;
+        return slot >= OUTPUT && slot < items.length
+                && (items[TARGET].isEmpty() || ItemStack.isSameItemSameComponents(stack, new ItemStack(items[TARGET].getItem())));
+    }
 
     @Override public Component getDisplayName() {
         return Component.translatable(getBlockState().getBlock().getDescriptionId());
     }
     @Override public AbstractContainerMenu createMenu(int id, Inventory inventory, Player player) {
-        return new HopperMenu(id, inventory, this);
+        return kind == EmcMachineBlock.Kind.CONDENSER ? new CondenserMenu(id, inventory, this) : new HopperMenu(id, inventory, this);
     }
 
     @Override

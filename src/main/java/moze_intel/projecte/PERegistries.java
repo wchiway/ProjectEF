@@ -18,6 +18,7 @@ public final class PERegistries {
 
     public static net.minecraft.world.inventory.MenuType<TransmutationMenu> TRANSMUTATION_MENU;
     public static net.minecraft.world.inventory.MenuType<AlchemicalChestMenu> ALCHEMICAL_CHEST_MENU;
+    public static net.minecraft.world.inventory.MenuType<CondenserMenu> CONDENSER_MENU;
     public static BlockEntityType<AlchemicalChestBlockEntity> ALCHEMICAL_CHEST_ENTITY;
     private static final Map<String, Item> ITEMS = new LinkedHashMap<>();
     private static final Map<String, Block> BLOCKS = new LinkedHashMap<>();
@@ -37,6 +38,8 @@ public final class PERegistries {
     public static void register() {
         TRANSMUTATION_MENU = Registry.register(BuiltInRegistries.MENU, PECore.id("transmutation"), new net.minecraft.world.inventory.MenuType<>(TransmutationMenu::new, net.minecraft.world.flag.FeatureFlags.DEFAULT_FLAGS));
         ALCHEMICAL_CHEST_MENU = Registry.register(BuiltInRegistries.MENU, PECore.id("alchemical_chest"), new net.minecraft.world.inventory.MenuType<>(AlchemicalChestMenu::new, net.minecraft.world.flag.FeatureFlags.DEFAULT_FLAGS));
+        CONDENSER_MENU = Registry.register(BuiltInRegistries.MENU, PECore.id("condenser"),
+                new net.minecraft.world.inventory.MenuType<>(CondenserMenu::new, net.minecraft.world.flag.FeatureFlags.DEFAULT_FLAGS));
         registerItems();
         registerBlocks();
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, PECore.id("projectef"), net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab.builder()
