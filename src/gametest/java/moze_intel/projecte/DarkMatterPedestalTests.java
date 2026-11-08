@@ -81,6 +81,39 @@ public final class DarkMatterPedestalTests {
         });
     }
 
+    @GameTest(maxTicks = 230)
+    public void watchBoostsCollectorLightGenerationAtAnyPhase(GameTestHelper helper) {
+        var level = helper.getLevel();
+        BlockPos pos = placePedestal(helper);
+        var player = player(helper, pos);
+        BlockPos inRange = pos.east(4);
+        BlockPos outside = pos.east(5);
+        helper.assertTrue(Math.floorMod(inRange.hashCode(), 10) != Math.floorMod(pos.hashCode(), 10),
+                "The collector's light pulse cannot coincide with this pedestal's ticks");
+        var collector = BuiltInRegistries.BLOCK.getValue(PECore.id("collector_mk1"));
+        for (BlockPos target : List.of(inRange, outside)) {
+            level.setBlockAndUpdate(target, collector.defaultBlockState());
+            level.setBlockAndUpdate(target.above(), Blocks.SEA_LANTERN.defaultBlockState());
+        }
+        var boosted = (EmcMachineBlockEntity) level.getBlockEntity(inRange);
+        var control = (EmcMachineBlockEntity) level.getBlockEntity(outside);
+        player.setItemInHand(InteractionHand.MAIN_HAND, item("watch_of_flowing_time"));
+        use(player, pos);
+
+        helper.runAfterDelay(10, () -> {
+            long boostedStart = boosted.storedEmc();
+            long controlStart = control.storedEmc();
+            use(player, pos);
+            helper.assertTrue(level.getBlockState(pos).getValue(DarkMatterPedestalBlock.ACTIVE),
+                    "The watch pedestal is active");
+            helper.runAfterDelay(200, () -> {
+                helper.assertTrue(boosted.storedEmc() - boostedStart == 44 && control.storedEmc() - controlStart == 40,
+                        "Four blocks away, the Watch adds one light pulse per 200 ticks regardless of position");
+                helper.succeed();
+            });
+        });
+    }
+
     @GameTest
     public void pedestalPersistsItsBandAndDropsItOnce(GameTestHelper helper) {
         var level = helper.getLevel();

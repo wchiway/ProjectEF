@@ -46,7 +46,7 @@ final class PedestalPowers {
                 for (BlockPos target : BlockPos.betweenClosed(pos.offset(-4, -4, -4), pos.offset(4, 4, 4))) {
                     if (ClassicRingItem.canChange(level, actor, item, target)
                             && level.getBlockEntity(target) instanceof EmcMachineBlockEntity machine) {
-                        EmcMachineBlockEntity.tick(level, target, machine.getBlockState(), machine);
+                        machine.tickFromWatch(level);
                     }
                 }
             }

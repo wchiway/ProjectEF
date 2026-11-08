@@ -29,6 +29,7 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
     private static final int[] EXTRACT = {OUTPUT};
     private static final int[] COLLECT = {INPUT, OUTPUT};
     private static final int[] CONDENSER_GRID = java.util.stream.IntStream.range(OUTPUT, OUTPUT + CondenserMenu.GRID_SIZE).toArray();
+    private static final int COLLECTOR_INTERVAL = 20;
     private static final int[] RATES = {4, 12, 40};
     private static final int[] TRANSFER = {64, 192, 640};
     private static final long[] COLLECTOR_CAPACITIES = {10_000, 30_000, 60_000};
@@ -40,6 +41,7 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
     private UUID owner;
     private long emc;
     private long pendingBurnEmc;
+    private int collectorBonusTicks;
 
     EmcMachineBlockEntity(BlockPos pos, BlockState state) {
         super(((EmcMachineBlock) state.getBlock()).kind == EmcMachineBlock.Kind.CONDENSER
@@ -80,23 +82,38 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
     }
 
     static void tick(Level level, BlockPos pos, BlockState state, EmcMachineBlockEntity machine) {
-        if (!(level instanceof ServerLevel server)) return;
-        if (machine.kind == EmcMachineBlock.Kind.CONDENSER) machine.condense(server);
-        else if (machine.kind == EmcMachineBlock.Kind.RELAY) machine.burnRelayFuel(server);
+        if (level instanceof ServerLevel server) {
+            boolean generate = level.getGameTime() % COLLECTOR_INTERVAL == Math.floorMod(pos.hashCode(), COLLECTOR_INTERVAL);
+            machine.processTick(server, generate);
+        }
+    }
 
-        if (machine.kind == EmcMachineBlock.Kind.COLLECTOR) {
-            if (level.getGameTime() % 20 == Math.floorMod(pos.hashCode(), 20)) {
-                int light = machine.lightLevel();
-                machine.accept(RATES[machine.tier] * light / 15);
+    void tickFromWatch(ServerLevel level) {
+        boolean generate = false;
+        if (kind == EmcMachineBlock.Kind.COLLECTOR) {
+            // Track bonus ticks independently so the pedestal's phase cannot skip or double generation.
+            collectorBonusTicks = (collectorBonusTicks + 1) % COLLECTOR_INTERVAL;
+            generate = collectorBonusTicks == 0;
+            setChanged();
+        }
+        processTick(level, generate);
+    }
+
+    private void processTick(ServerLevel level, boolean generate) {
+        switch (kind) {
+            case CONDENSER -> condense(level);
+            case RELAY -> burnRelayFuel(level);
+            case COLLECTOR -> {
+                if (generate) accept(RATES[tier] * lightLevel() / 15);
+                upgradeFuel(level);
             }
-            machine.upgradeFuel(server);
         }
 
-        ItemStack star = machine.items[STAR];
-        if (star.getItem() instanceof KleinStarItem klein && machine.emc > 0) {
-            machine.spend(klein.charge(star, Math.min(machine.emc, TRANSFER[machine.tier])));
+        ItemStack star = items[STAR];
+        if (star.getItem() instanceof KleinStarItem klein && emc > 0) {
+            spend(klein.charge(star, Math.min(emc, TRANSFER[tier])));
         }
-        if (machine.kind != EmcMachineBlock.Kind.CONDENSER) machine.transfer(server, pos);
+        if (kind != EmcMachineBlock.Kind.CONDENSER) transfer(level, worldPosition);
     }
 
     private void condense(ServerLevel level) {
@@ -317,6 +334,7 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
         if (owner != null) output.store("owner", UUIDUtil.CODEC, owner);
         output.putLong("emc", emc);
         if (pendingBurnEmc > 0) output.putLong("pending_burn_emc", pendingBurnEmc);
+        if (collectorBonusTicks > 0) output.putInt("collector_bonus_ticks", collectorBonusTicks);
         for (int slot = 0; slot < items.length; slot++) {
             if (!items[slot].isEmpty()) output.store("slot_" + slot, ItemStack.CODEC, items[slot]);
         }
@@ -330,6 +348,8 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
         emc = Math.clamp(input.getLongOr("emc", 0), 0, capacity);
         pendingBurnEmc = kind == EmcMachineBlock.Kind.RELAY
                 ? Math.max(0, input.getLongOr("pending_burn_emc", 0)) : 0;
+        collectorBonusTicks = kind == EmcMachineBlock.Kind.COLLECTOR
+                ? Math.clamp(input.getIntOr("collector_bonus_ticks", 0), 0, COLLECTOR_INTERVAL - 1) : 0;
         for (int slot = 0; slot < items.length; slot++) {
             items[slot] = input.read("slot_" + slot, ItemStack.CODEC).orElse(ItemStack.EMPTY);
         }
