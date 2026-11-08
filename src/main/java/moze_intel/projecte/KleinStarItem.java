@@ -99,6 +99,12 @@ public final class KleinStarItem extends Item {
         }
     }
 
+    boolean discharge(ServerPlayer player, ItemStack stack) {
+        if (!PETransmutationState.deposit(player.level().getServer(), player.getUUID(), stored(stack), 1)) return false;
+        setStored(stack, 0);
+        return true;
+    }
+
     @Override
     public InteractionResult use(Level level, Player player, InteractionHand hand) {
         if (player instanceof ServerPlayer server && !player.isSpectator()) {
@@ -107,8 +113,8 @@ public final class KleinStarItem extends Item {
             if (player.isShiftKeyDown()) {
                 long amount = Math.min(PETransmutationState.balance(server), capacity - stored);
                 if (PETransmutationState.spendEmc(server, amount)) setStored(stack, stored + amount);
-            } else if (PETransmutationState.deposit(server.level().getServer(), server.getUUID(), stored, 1)) {
-                setStored(stack, 0);
+            } else {
+                discharge(server, stack);
             }
             server.sendSystemMessage(Component.literal(stored(stack) + " / " + capacity + " EMC"), true);
         }
@@ -119,6 +125,6 @@ public final class KleinStarItem extends Item {
     public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay display,
                                 Consumer<Component> lines, TooltipFlag flag) {
         lines.accept(Component.literal(stored(stack) + " / " + capacity + " EMC"));
-        lines.accept(Component.literal("Sneak-use to charge from your account. Use to deposit."));
+        lines.accept(Component.literal("Sneak-use to charge. Use or place in the transmutation input to discharge."));
     }
 }

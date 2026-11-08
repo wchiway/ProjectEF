@@ -237,7 +237,9 @@ public final class PETransmutationState extends SavedData {
         } else if ("sell".equals(request.command())) {
             int slot = request.slot();
             if (slot < 0 || slot >= 36) return;
-            sellStack(player, player.getInventory().getItem(slot), request.count());
+            if (depositInput(player, player.getInventory().getItem(slot), request.count()) != DepositResult.NONE) {
+                player.getInventory().setChanged();
+            }
         } else if ("buy".equals(request.command())) {
             ItemStack exemplar;
             if (request.item().startsWith("variant:")) {
@@ -307,6 +309,17 @@ public final class PETransmutationState extends SavedData {
         state.update(player, new Account(current.balance(), List.copyOf(learned), List.copyOf(variants), remapFavorites(current, learned, variants)));
         return true;
     }
+    enum DepositResult { NONE, SOLD, DISCHARGED }
+
+    static DepositResult depositInput(ServerPlayer player, ItemStack stack, int count) {
+        if (stack.getItem() instanceof KleinStarItem star && star.stored(stack) > 0) {
+            return star.discharge(player, stack) ? DepositResult.DISCHARGED : DepositResult.NONE;
+        }
+        int before = stack.getCount();
+        sellStack(player, stack, count);
+        return stack.getCount() < before ? DepositResult.SOLD : DepositResult.NONE;
+    }
+
     public static void sellStack(ServerPlayer player, ItemStack stack, int count) {
         PETransmutationState state = state(player);
         Account current = state.account(player);

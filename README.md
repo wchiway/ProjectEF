@@ -6,9 +6,9 @@ It is designed for **Minecraft 26.3** with **Fabric**. The goal is to make EMC u
 
 ## Current version
 
-**1.2.12-fabric.26.3**
+**1.2.13-fabric.26.3**
 
-[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.12-fabric.26.3.jar?raw=true)
+[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.13-fabric.26.3.jar?raw=true)
 
 Install Fabric Loader and Fabric API for Minecraft 26.3. Close Minecraft, remove
 any previous ProjectEF JAR, and place the downloaded JAR in `mods/`. Install the
@@ -59,7 +59,9 @@ using its own input or EMC from adjacent machines. A condenser with an empty
 target keeps depositing input EMC into its owner's account.
 
 Sneak-use a Klein Star to charge it from your account, or use it normally to
-deposit the charge. A machine can charge a star in its Klein Star slot. Gem
+deposit the charge. You can also place a charged star in the table or tablet's
+EMC input slot to drain it, then take the empty star back. A machine can charge
+a star in its Klein Star slot. Gem
 Armor and the Tome of Knowledge require fully charged Omega stars.
 
 Use an Alchemy Bag to open 104 slots of storage shared by bags of that color

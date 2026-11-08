@@ -86,7 +86,7 @@ public class TransmutationScreen extends AbstractContainerScreen<TransmutationMe
         if((favoritePage+1)*FAVORITES.length<favorites.size())g.text(font,">",left+84,top+84,0xFF404040,false);
         draw(g,mouseX,mouseY,filtered,page,LEARNED,false);
         draw(g,mouseX,mouseY,favorites,favoritePage,FAVORITES,true);
-        if(hit(mouseX,mouseY,107,97,16,16))tip(g,"Deposit items for EMC",mouseX,mouseY);
+        if(hit(mouseX,mouseY,107,97,16,16))tip(g,"Deposit items for EMC. Charged Klein Stars empty here and can be taken back.",mouseX,mouseY);
         else if(hit(mouseX,mouseY,89,97,16,16))tip(g,"Forget: drag a learned icon here, or place an item to forget its exact variant. Physical items are returned.",mouseX,mouseY);
     }
     private void draw(GuiGraphicsExtractor g,int mouseX,int mouseY,List<String> keys,int current,int[][] positions,boolean pinned){

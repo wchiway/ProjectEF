@@ -91,6 +91,64 @@ public final class ClassicExpansionTests {
     }
 
     @GameTest
+    public void transmutationTableDrainsStarAndKeepsItInInput(GameTestHelper helper) {
+        var player = player(helper);
+        var level = helper.getLevel();
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 2, 1));
+        var table = BuiltInRegistries.BLOCK.getValue(PECore.id("transmutation_table"));
+        level.setBlockAndUpdate(pos, table.defaultBlockState());
+        PETransmutationState.open(player, false, pos.asLong());
+        var menu = (TransmutationMenu) player.containerMenu;
+
+        ItemStack stack = item("klein_star_ein");
+        var name = net.minecraft.network.chat.Component.literal("My Klein Star");
+        stack.set(DataComponents.CUSTOM_NAME, name);
+        var star = (KleinStarItem) stack.getItem();
+        star.charge(stack, 25_000);
+        menu.getSlot(0).set(stack);
+        menu.broadcastChanges();
+        menu.broadcastChanges();
+
+        ItemStack returned = menu.getSlot(0).getItem();
+        helper.assertTrue(returned.is(star) && returned.getCount() == 1 && star.stored(returned) == 0
+                        && name.equals(returned.get(DataComponents.CUSTOM_NAME)),
+                "The deposit slot leaves the same named star with no charge across menu ticks");
+        helper.assertTrue(PETransmutationState.balance(player) == 25_000
+                        && PETransmutationState.knowledgeRevision(player) == 0,
+                "The table deposits only the charge, once, without learning the shell");
+
+        ItemStack expected = returned.copy();
+        player.closeContainer();
+        helper.assertTrue(player.getInventory().contains(starItem -> ItemStack.isSameItemSameComponents(starItem, expected)),
+                "Closing the menu returns the discharged star to the player");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void transmutationTabletDischargesInventoryStars(GameTestHelper helper) {
+        var player = player(helper);
+        player.setItemInHand(InteractionHand.MAIN_HAND, item("transmutation_tablet"));
+        PETransmutationState.open(player, true, 0);
+        var menu = (TransmutationMenu) player.containerMenu;
+        ItemStack starStack = item("klein_star_zwei");
+        var star = (KleinStarItem) starStack.getItem();
+        star.charge(starStack, 600);
+        player.getInventory().setItem(9, starStack);
+        PETransmutationState.action(player, new PEPackets.Action(true, 0, "sell", 9, "", 64));
+        helper.assertTrue(star.stored(starStack) == 0 && player.getInventory().getItem(9).is(star)
+                        && PETransmutationState.balance(player) == 600,
+                "The inventory sweep drains charge without moving or selling the star");
+
+        star.charge(starStack, 700);
+        menu.quickMoveStack(player, 2);
+        helper.assertTrue(star.stored(starStack) == 0 && player.getInventory().getItem(9).is(star)
+                        && PETransmutationState.balance(player) == 1_300,
+                "Vanilla shift-click also drains a charged star without selling it");
+        player.closeContainer();
+        helper.succeed();
+    }
+
+    @GameTest
     public void gemBootsRequireFullStar(GameTestHelper helper) {
         var recipe = recipe(helper, "gem_boots");
         var omega = item("klein_star_omega");
