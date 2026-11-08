@@ -277,9 +277,8 @@ public final class ClassicExpansionTests {
         var player = player(helper);
         BlockPos center = helper.absolutePos(new BlockPos(1, 7, 1));
         var commands = level.getServer().getCommands();
-        commands.performPrefixedCommand(player.createCommandSourceStack(), "projecte lootballs off");
-        helper.assertTrue(!MiningDropPreferences.usesLootBalls(player) && MiningDropPreferences.usesLootBalls(player(helper)),
-                "A survival player can disable Loot Balls for their own mining");
+        helper.assertTrue(!MiningDropPreferences.usesLootBalls(player),
+                "A survival player starts with Loot Balls disabled without running a command");
 
         BlockPos edge = center.east(3);
         BlockPos outside = center.east(4);
@@ -297,11 +296,12 @@ public final class ClassicExpansionTests {
         var drops = level.getEntitiesOfClass(ItemEntity.class, new AABB(center).inflate(2));
         helper.assertTrue(level.isEmptyBlock(edge) && level.getBlockState(outside).is(Blocks.STONE)
                         && drops.size() == 1 && drops.getFirst().getItem().is(Items.COBBLESTONE),
-                "Charge 3 mines out to radius 3 and drops regular items with Loot Balls off");
+                "Charge 3 mines out to radius 3 and drops regular items by default");
 
         drops.getFirst().discard();
         commands.performPrefixedCommand(player.createCommandSourceStack(), "projecte lootballs on");
-        helper.assertTrue(MiningDropPreferences.usesLootBalls(player), "The same player can restore Loot Balls");
+        helper.assertTrue(MiningDropPreferences.usesLootBalls(player) && !MiningDropPreferences.usesLootBalls(player(helper)),
+                "Enabling Loot Balls affects only the player who opted in");
         level.setBlockAndUpdate(edge, Blocks.STONE.defaultBlockState());
         ItemStack morningStar = item("rm_morning_star");
         player.setItemInHand(InteractionHand.MAIN_HAND, morningStar);
@@ -311,6 +311,8 @@ public final class ClassicExpansionTests {
         helper.assertTrue(level.isEmptyBlock(edge) && drops.size() == 1
                         && drops.getFirst().getItem().is(item("loot_ball").getItem()),
                 "The Morning Star reaches radius 3 and packs drops when the preference is on");
+        commands.performPrefixedCommand(player.createCommandSourceStack(), "projecte lootballs off");
+        helper.assertTrue(!MiningDropPreferences.usesLootBalls(player), "A player can clear their opt-in");
         helper.succeed();
     }
 

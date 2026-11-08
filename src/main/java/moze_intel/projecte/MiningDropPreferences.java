@@ -17,14 +17,15 @@ import net.minecraft.world.level.saveddata.SavedDataType;
 
 final class MiningDropPreferences extends SavedData {
     private static final Codec<MiningDropPreferences> CODEC = UUIDUtil.CODEC.listOf()
-            .xmap(MiningDropPreferences::new, data -> List.copyOf(data.disabled));
+            .xmap(MiningDropPreferences::new, data -> List.copyOf(data.lootBallOptIns));
+    // The previous save key held opt-outs. Reusing it would turn those players into opt-ins.
     private static final SavedDataType<MiningDropPreferences> TYPE = new SavedDataType<>(
-            PECore.id("mining_drop_preferences"), () -> new MiningDropPreferences(List.of()), CODEC, null);
+            PECore.id("loot_ball_opt_ins"), () -> new MiningDropPreferences(List.of()), CODEC, null);
 
-    private final Set<UUID> disabled;
+    private final Set<UUID> lootBallOptIns;
 
-    private MiningDropPreferences(List<UUID> disabled) {
-        this.disabled = new HashSet<>(disabled);
+    private MiningDropPreferences(List<UUID> lootBallOptIns) {
+        this.lootBallOptIns = new HashSet<>(lootBallOptIns);
     }
 
     private static MiningDropPreferences forPlayer(ServerPlayer player) {
@@ -32,7 +33,7 @@ final class MiningDropPreferences extends SavedData {
     }
 
     static boolean usesLootBalls(ServerPlayer player) {
-        return !forPlayer(player).disabled.contains(player.getUUID());
+        return forPlayer(player).lootBallOptIns.contains(player.getUUID());
     }
 
     static void registerCommand() {
@@ -48,7 +49,7 @@ final class MiningDropPreferences extends SavedData {
     private static int set(CommandSourceStack source, boolean enabled) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         MiningDropPreferences data = forPlayer(player);
-        boolean changed = enabled ? data.disabled.remove(player.getUUID()) : data.disabled.add(player.getUUID());
+        boolean changed = enabled ? data.lootBallOptIns.add(player.getUUID()) : data.lootBallOptIns.remove(player.getUUID());
         if (changed) data.setDirty();
         return report(source, enabled);
     }

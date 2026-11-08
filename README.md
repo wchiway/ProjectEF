@@ -6,9 +6,9 @@ It is designed for **Minecraft 26.3** with **Fabric**. The goal is to make EMC u
 
 ## Current version
 
-**1.2.17-fabric.26.3**
+**1.2.18-fabric.26.3**
 
-[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.17-fabric.26.3.jar?raw=true)
+[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.18-fabric.26.3.jar?raw=true)
 
 Install Fabric Loader and Fabric API for Minecraft 26.3. Close Minecraft, remove
 any previous ProjectEF JAR, and place the downloaded JAR in `mods/`. Install the
@@ -62,10 +62,12 @@ builds a 3×3 column extending 3 to 15 blocks out from the clicked face.
 
 ## Area mining drops
 
-Use `/projecte lootballs off` to drop regular items from charged Matter tools,
-the Destruction Catalyst and the mining lenses. Use `/projecte lootballs on`
-to pack their drops into Loot Balls again. Run `/projecte lootballs` to check
-your setting. This preference is saved per player in the world.
+Charged Matter tools, the Destruction Catalyst and the mining lenses drop
+regular items by default, including in Hardcore. Use `/projecte lootballs on`
+to opt in to Loot Balls or `/projecte lootballs off` to return to regular drops.
+Run `/projecte lootballs` to check your setting. This preference is saved per
+player in the world. Players upgrading from earlier versions start with regular
+drops.
 
 ## EMC machines and storage
 
