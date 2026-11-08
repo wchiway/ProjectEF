@@ -78,17 +78,23 @@ final class MiningPowerItem extends Item {
         Direction x = face.getAxis() == Direction.Axis.X ? Direction.SOUTH : Direction.EAST;
         Direction y = face.getAxis() == Direction.Axis.Y ? Direction.SOUTH : Direction.UP;
         List<ItemStack> drops = new ArrayList<>();
-        if (!PowerFuel.spend(player, 64L * (charge + 1))) return;
-        for (int d = 0; d < depth; d++) {
-            BlockPos slice = center.relative(face.getOpposite(), d);
-            for (int a = -width; a <= width; a++) {
-                for (int b = -width; b <= width; b++) {
-                    BlockPos pos = slice.relative(x, a).relative(y, b);
-                    if (ClassicRingItem.canChange(level, player, stack, pos)) collect(level, pos, player, drops);
+        var result = PowerFuel.spendIf(player, 64L * (charge + 1), () -> {
+            boolean mined = false;
+            for (int d = 0; d < depth; d++) {
+                BlockPos slice = center.relative(face.getOpposite(), d);
+                for (int a = -width; a <= width; a++) {
+                    for (int b = -width; b <= width; b++) {
+                        BlockPos pos = slice.relative(x, a).relative(y, b);
+                        if (ClassicRingItem.canChange(level, player, stack, pos) && collect(level, pos, player, drops)) {
+                            mined = true;
+                        }
+                    }
                 }
             }
-        }
-        LootBallItem.drop(level, Vec3.atCenterOf(center.relative(face)), drops);
+            return mined;
+        });
+        if (result != PowerFuel.SpendResult.APPLIED) return;
+        LootBallItem.dropMining(level, player, center.relative(face), drops);
         player.getCooldowns().addCooldown(stack, 10);
     }
 
@@ -98,15 +104,17 @@ final class MiningPowerItem extends Item {
                                 java.util.function.Consumer<net.minecraft.network.chat.Component> lines,
                                 net.minecraft.world.item.TooltipFlag flag) {
         lines.accept(net.minecraft.network.chat.Component.literal("Charge " + (charge(stack) + 1) + "/4"));
-        lines.accept(net.minecraft.network.chat.Component.literal("Sneak-use to cycle charge. Right-click to mine into a Loot Ball."));
+        lines.accept(net.minecraft.network.chat.Component.literal("Sneak-use to cycle charge. Right-click to mine."));
     }
 
-    static void collect(ServerLevel level, BlockPos pos, Entity actor, List<ItemStack> drops) {
+    static boolean collect(ServerLevel level, BlockPos pos, Entity actor, List<ItemStack> drops) {
         var state = level.getBlockState(pos);
         if (state.isAir() || state.hasBlockEntity() || !state.getFluidState().isEmpty()
-                || state.getDestroySpeed(level, pos) < 0 || state.getBlock().getExplosionResistance() >= 1_200) return;
+                || state.getDestroySpeed(level, pos) < 0 || state.getBlock().getExplosionResistance() >= 1_200) return false;
         List<ItemStack> loot = level.getGameRules().get(net.minecraft.world.level.gamerules.GameRules.BLOCK_DROPS)
                 ? Block.getDrops(state, level, pos, null, actor, new ItemStack(Items.NETHERITE_PICKAXE)) : List.of();
-        if (level.destroyBlock(pos, false, actor)) drops.addAll(loot);
+        if (!level.destroyBlock(pos, false, actor)) return false;
+        drops.addAll(loot);
+        return true;
     }
 }

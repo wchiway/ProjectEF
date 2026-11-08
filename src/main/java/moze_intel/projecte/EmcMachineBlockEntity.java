@@ -39,6 +39,7 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
     private final long capacity;
     private UUID owner;
     private long emc;
+    private long pendingBurnEmc;
 
     EmcMachineBlockEntity(BlockPos pos, BlockState state) {
         super(((EmcMachineBlock) state.getBlock()).kind == EmcMachineBlock.Kind.CONDENSER
@@ -65,6 +66,8 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
 
     long capacity() { return capacity; }
 
+    long pendingBurnEmc() { return pendingBurnEmc; }
+
     int lightLevel() {
         return level == null ? 0 : level.getMaxLocalRawBrightness(worldPosition.above());
     }
@@ -79,7 +82,7 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
     static void tick(Level level, BlockPos pos, BlockState state, EmcMachineBlockEntity machine) {
         if (!(level instanceof ServerLevel server)) return;
         if (machine.kind == EmcMachineBlock.Kind.CONDENSER) machine.condense(server);
-        else if (machine.kind == EmcMachineBlock.Kind.RELAY) machine.burnFuel(server);
+        else if (machine.kind == EmcMachineBlock.Kind.RELAY) machine.burnRelayFuel(server);
 
         if (machine.kind == EmcMachineBlock.Kind.COLLECTOR) {
             if (level.getGameTime() % 20 == Math.floorMod(pos.hashCode(), 20)) {
@@ -119,7 +122,13 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
         if (emc >= unit && addCondenserOutput(result)) spend(unit);
     }
 
-    private void burnFuel(ServerLevel level) {
+    private void burnRelayFuel(ServerLevel level) {
+        if (emc >= capacity) return;
+        if (pendingBurnEmc > 0) {
+            pendingBurnEmc -= accept(pendingBurnEmc);
+            return;
+        }
+
         burnFuel(level, items[INPUT]);
     }
 
@@ -128,8 +137,14 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
             return accept(star.drain(input, Math.min(capacity - emc, TRANSFER[tier]))) > 0;
         }
         long value = price(level, input);
-        if (value <= 0 || value > capacity - emc) return false;
-        accept(value);
+        if (value <= 0 || emc >= capacity) return false;
+        if (kind == EmcMachineBlock.Kind.RELAY && value > capacity) {
+            // Consume one item and retain its remaining EMC while the tier's buffer drains.
+            pendingBurnEmc = value - accept(value);
+        } else {
+            if (value > capacity - emc) return false;
+            accept(value);
+        }
         input.shrink(1);
         return true;
     }
@@ -301,6 +316,7 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
         super.saveAdditional(output);
         if (owner != null) output.store("owner", UUIDUtil.CODEC, owner);
         output.putLong("emc", emc);
+        if (pendingBurnEmc > 0) output.putLong("pending_burn_emc", pendingBurnEmc);
         for (int slot = 0; slot < items.length; slot++) {
             if (!items[slot].isEmpty()) output.store("slot_" + slot, ItemStack.CODEC, items[slot]);
         }
@@ -312,6 +328,8 @@ final class EmcMachineBlockEntity extends BlockEntity implements WorldlyContaine
             try { return UUID.fromString(value); } catch (IllegalArgumentException ignored) { return null; }
         }).orElse(null));
         emc = Math.clamp(input.getLongOr("emc", 0), 0, capacity);
+        pendingBurnEmc = kind == EmcMachineBlock.Kind.RELAY
+                ? Math.max(0, input.getLongOr("pending_burn_emc", 0)) : 0;
         for (int slot = 0; slot < items.length; slot++) {
             items[slot] = input.read("slot_" + slot, ItemStack.CODEC).orElse(ItemStack.EMPTY);
         }

@@ -6,9 +6,9 @@ It is designed for **Minecraft 26.3** with **Fabric**. The goal is to make EMC u
 
 ## Current version
 
-**1.2.15-fabric.26.3**
+**1.2.16-fabric.26.3**
 
-[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.15-fabric.26.3.jar?raw=true)
+[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.16-fabric.26.3.jar?raw=true)
 
 Install Fabric Loader and Fabric API for Minecraft 26.3. Close Minecraft, remove
 any previous ProjectEF JAR, and place the downloaded JAR in `mods/`. Install the
@@ -57,6 +57,13 @@ and can sample the clicked block if your other hand is empty. Transmutation
 replaces matching blocks in a plane and charges the difference in EMC. Pillar
 builds a 3×3 column extending 3 to 15 blocks out from the clicked face.
 
+## Area mining drops
+
+Use `/projecte lootballs off` to drop regular items from charged Matter tools,
+the Destruction Catalyst and the mining lenses. Use `/projecte lootballs on`
+to pack their drops into Loot Balls again. Run `/projecte lootballs` to check
+your setting. This preference is saved per player in the world.
+
 ## EMC machines and storage
 
 A collector generates EMC from the light above it and upgrades fuel in its
@@ -64,6 +71,8 @@ input slot. Place it beside a relay or condenser to transfer EMC. A relay
 converts valued input items into EMC and can drain a Klein Star in its input.
 Collectors and relays have dedicated menus with live EMC readouts and a
 Klein Star charging slot. The collector also shows its light level and fuel output.
+When an item exceeds a relay's buffer, the relay queues the excess EMC and
+releases it as the buffer drains.
 
 The Energy Condenser has a target slot at the top left, a live EMC bar, and a
 91-slot grid. With a target set, the grid holds both fuel and produced copies

@@ -32,6 +32,9 @@ final class EmcMachineScreen extends AbstractContainerScreen<EmcMachineMenu> {
             centered(graphics, Component.literal("Klein Star"), 88, 84);
             centered(graphics, Component.literal("Output"), 152, 84);
         } else {
+            if (menu.pendingBurnEmc() > 0) {
+                centered(graphics, Component.literal("Queued " + menu.pendingBurnEmc()), 88, 42);
+            }
             centered(graphics, Component.literal("Burn input"), 56, 84);
             centered(graphics, Component.literal("Klein Star"), 120, 84);
         }

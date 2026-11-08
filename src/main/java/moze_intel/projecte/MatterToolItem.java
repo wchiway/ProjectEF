@@ -62,7 +62,7 @@ public final class MatterToolItem extends Item {
    ArrayDeque<BlockPos> work=new ArrayDeque<>();Set<BlockPos> seen=new HashSet<>();work.add(origin);
    while(!work.isEmpty()&&blocks.size()<256){BlockPos p=work.removeFirst();if(!seen.add(p)||!level.isLoaded(p)||!level.getBlockState(p).is(BlockTags.LOGS)||p.distSqr(origin)>256)continue;blocks.add(p);for(Direction d:Direction.values())work.add(p.relative(d));}
   }else{
-   int r=Math.min(charge,2);Direction.Axis axis=c.getClickedFace().getAxis();
+   int r=charge;Direction.Axis axis=c.getClickedFace().getAxis();
    for(int a=-r;a<=r;a++)for(int b=-r;b<=r;b++)blocks.add(axis==Direction.Axis.X?origin.offset(0,a,b):axis==Direction.Axis.Y?origin.offset(a,0,b):origin.offset(a,b,0));
   }
   List<ItemStack> drops = new ArrayList<>();
@@ -86,7 +86,7 @@ public final class MatterToolItem extends Item {
     if (level.destroyBlock(p, false, player)) drops.addAll(loot);
    }
   }
-  LootBallItem.drop(level, net.minecraft.world.phys.Vec3.atCenterOf(origin.relative(c.getClickedFace())), drops);
+  LootBallItem.dropMining(level, player, origin.relative(c.getClickedFace()), drops);
   player.getCooldowns().addCooldown(c.getItemInHand(),10);return InteractionResult.SUCCESS;
  }
  @Override public InteractionResult interactLivingEntity(ItemStack stack,Player player,LivingEntity target,InteractionHand hand){

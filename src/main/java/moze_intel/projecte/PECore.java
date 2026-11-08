@@ -73,6 +73,7 @@ public class PECore implements ModInitializer {
             }
         });
         PESetEmcCommand.register();
+        MiningDropPreferences.registerCommand();
         net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.registerGlobalReceiver(
                 PEPackets.Action.TYPE, (packet, context) ->
                         context.server().execute(() -> {

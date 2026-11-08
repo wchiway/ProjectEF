@@ -19,11 +19,12 @@ public final class EmcMachineMenu extends AbstractContainerMenu {
     private final boolean collector;
 
     EmcMachineMenu(int id, Inventory inventory, boolean collector) {
-        this(id, inventory, new SimpleContainer(5), collector, new EmcMenuData(3));
+        this(id, inventory, new SimpleContainer(5), collector, new EmcMenuData(4));
     }
 
     EmcMachineMenu(int id, Inventory inventory, EmcMachineBlockEntity machine, boolean collector) {
-        this(id, inventory, machine, collector, new EmcMenuData(machine::storedEmc, machine::capacity, machine::lightLevel));
+        this(id, inventory, machine, collector, new EmcMenuData(
+                machine::storedEmc, machine::capacity, machine::lightLevel, machine::pendingBurnEmc));
     }
 
     private EmcMachineMenu(int id, Inventory inventory, Container machine, boolean collector, EmcMenuData data) {
@@ -49,6 +50,7 @@ public final class EmcMachineMenu extends AbstractContainerMenu {
     public long storedEmc() { return data.value(0); }
     public long capacity() { return data.value(1); }
     public int lightLevel() { return (int) data.value(2); }
+    public long pendingBurnEmc() { return data.value(3); }
 
     @Override
     public boolean stillValid(Player player) {

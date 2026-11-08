@@ -52,6 +52,43 @@ public final class ClassicExpansionTests {
     }
 
     @GameTest
+    public void relaySavesAndReleasesOversizedFuel(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var player = player(helper);
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 2, 1));
+        var relay = placeMachine(helper, pos, "relay_mk3");
+        ItemStack helmet = item("gem_helmet");
+        long value = PEEmcOverrides.forPlayer(player).value(helmet);
+        helper.assertTrue(value > relay.capacity() && relay.canPlaceItem(EmcMachineBlockEntity.INPUT, helmet),
+                "An oversized Gem Helmet is accepted as fuel");
+
+        relay.setItem(EmcMachineBlockEntity.INPUT, helmet);
+        EmcMachineBlockEntity.tick(level, pos, relay.getBlockState(), relay);
+        helper.assertTrue(relay.getItem(EmcMachineBlockEntity.INPUT).isEmpty()
+                        && relay.storedEmc() == relay.capacity() && relay.pendingBurnEmc() == value - relay.capacity(),
+                "The relay burns the item once and queues all EMC above capacity");
+
+        var save = relay.saveWithoutMetadata(level.registryAccess());
+        relay.loadCustomOnly(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), save));
+        player.openMenu(relay);
+        helper.assertTrue(((EmcMachineMenu) player.containerMenu).pendingBurnEmc() == value - relay.capacity(),
+                "The saved queue appears in the relay menu after reload");
+        player.closeContainer();
+
+        ItemStack starStack = item("klein_star_ein");
+        relay.setItem(EmcMachineBlockEntity.STAR, starStack);
+        relay.setItem(EmcMachineBlockEntity.INPUT, new ItemStack(Items.DIRT));
+        EmcMachineBlockEntity.tick(level, pos, relay.getBlockState(), relay);
+        EmcMachineBlockEntity.tick(level, pos, relay.getBlockState(), relay);
+        long charge = ((KleinStarItem) starStack.getItem()).stored(starStack);
+        helper.assertTrue(charge > 0 && relay.pendingBurnEmc() < value - relay.capacity()
+                        && relay.storedEmc() + relay.pendingBurnEmc() + charge == value
+                        && relay.getItem(EmcMachineBlockEntity.INPUT).is(Items.DIRT),
+                "The queue resumes when capacity frees up, conserving EMC and finishing before the next item");
+        helper.succeed();
+    }
+
+    @GameTest
     public void oldCondenserSaveStillDepositsIntoOwnersAccount(GameTestHelper helper) {
         var level = helper.getLevel();
         BlockPos pos = helper.absolutePos(new BlockPos(1, 2, 1));
@@ -231,6 +268,84 @@ public final class ClassicExpansionTests {
         helper.assertTrue(armorRecipe.matches(armorInput, helper.getLevel())
                         && armorRecipe.getRemainingItems(armorInput).get(1).isEmpty(),
                 "The Gem Chestplate still consumes its amulet ingredient");
+        helper.succeed();
+    }
+
+    @GameTest
+    public void maxChargeMatterMiningHonorsLootBallPreference(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var player = player(helper);
+        BlockPos center = helper.absolutePos(new BlockPos(1, 7, 1));
+        var commands = level.getServer().getCommands();
+        commands.performPrefixedCommand(player.createCommandSourceStack(), "projecte lootballs off");
+        helper.assertTrue(!MiningDropPreferences.usesLootBalls(player) && MiningDropPreferences.usesLootBalls(player(helper)),
+                "A survival player can disable Loot Balls for their own mining");
+
+        BlockPos edge = center.east(3);
+        BlockPos outside = center.east(4);
+        level.setBlockAndUpdate(edge, Blocks.STONE.defaultBlockState());
+        level.setBlockAndUpdate(outside, Blocks.STONE.defaultBlockState());
+        ItemStack pickaxe = item("rm_pick");
+        player.setItemInHand(InteractionHand.MAIN_HAND, pickaxe);
+        chargeMatterTool(level, player, pickaxe, 2);
+        var hit = new BlockHitResult(Vec3.atCenterOf(center), Direction.UP, center, false);
+        pickaxe.getItem().useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
+        helper.assertTrue(level.getBlockState(edge).is(Blocks.STONE), "Charge 2 stops at radius 2");
+        chargeMatterTool(level, player, pickaxe, 1);
+        player.getCooldowns().removeCooldown(PECore.id("rm_pick"));
+        pickaxe.getItem().useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
+        var drops = level.getEntitiesOfClass(ItemEntity.class, new AABB(center).inflate(2));
+        helper.assertTrue(level.isEmptyBlock(edge) && level.getBlockState(outside).is(Blocks.STONE)
+                        && drops.size() == 1 && drops.getFirst().getItem().is(Items.COBBLESTONE),
+                "Charge 3 mines out to radius 3 and drops regular items with Loot Balls off");
+
+        drops.getFirst().discard();
+        commands.performPrefixedCommand(player.createCommandSourceStack(), "projecte lootballs on");
+        helper.assertTrue(MiningDropPreferences.usesLootBalls(player), "The same player can restore Loot Balls");
+        level.setBlockAndUpdate(edge, Blocks.STONE.defaultBlockState());
+        ItemStack morningStar = item("rm_morning_star");
+        player.setItemInHand(InteractionHand.MAIN_HAND, morningStar);
+        chargeMatterTool(level, player, morningStar, 3);
+        morningStar.getItem().useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
+        drops = level.getEntitiesOfClass(ItemEntity.class, new AABB(center).inflate(2));
+        helper.assertTrue(level.isEmptyBlock(edge) && drops.size() == 1
+                        && drops.getFirst().getItem().is(item("loot_ball").getItem()),
+                "The Morning Star reaches radius 3 and packs drops when the preference is on");
+        helper.succeed();
+    }
+
+    private static void chargeMatterTool(net.minecraft.server.level.ServerLevel level, ServerPlayer player,
+                                         ItemStack stack, int steps) {
+        player.setShiftKeyDown(true);
+        for (int i = 0; i < steps; i++) stack.getItem().use(level, player, InteractionHand.MAIN_HAND);
+        player.setShiftKeyDown(false);
+    }
+
+    @GameTest
+    public void catalystAndLensesChargeOnlyWhenTheyMine(GameTestHelper helper) {
+        var player = player(helper);
+        var level = helper.getLevel();
+        BlockPos center = helper.absolutePos(new BlockPos(1, 7, 1));
+        PETransmutationState.deposit(level.getServer(), player.getUUID(), 192, 1);
+
+        var hit = new BlockHitResult(Vec3.atCenterOf(center), Direction.UP, center, false);
+        long expectedBalance = 192;
+        for (String name : List.of("destruction_catalyst", "catalytic_lens", "hyperkinetic_lens")) {
+            ItemStack tool = item(name);
+            player.setItemInHand(InteractionHand.MAIN_HAND, tool);
+            level.setBlockAndUpdate(center, Blocks.OBSIDIAN.defaultBlockState());
+            tool.getItem().useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
+            helper.assertTrue(level.getBlockState(center).is(Blocks.OBSIDIAN)
+                            && PETransmutationState.balance(player) == expectedBalance
+                            && !player.getCooldowns().isOnCooldown(tool),
+                    "A failed mining attempt spends no EMC and adds no cooldown");
+
+            level.setBlockAndUpdate(center, Blocks.STONE.defaultBlockState());
+            tool.getItem().useOn(new UseOnContext(player, InteractionHand.MAIN_HAND, hit));
+            expectedBalance -= 64;
+            helper.assertTrue(level.isEmptyBlock(center) && PETransmutationState.balance(player) == expectedBalance,
+                    "Breaking a block spends the normal EMC cost");
+        }
         helper.succeed();
     }
 

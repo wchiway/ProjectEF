@@ -2,9 +2,11 @@ package moze_intel.projecte;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Prediction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -14,11 +16,20 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.Vec3;
 
 final class LootBallItem extends Item {
     LootBallItem(Properties properties) {
         super(properties);
+    }
+
+    static void dropMining(ServerLevel level, Player player, BlockPos pos, List<ItemStack> drops) {
+        if (player instanceof ServerPlayer server && !MiningDropPreferences.usesLootBalls(server)) {
+            drops.forEach(stack -> Block.popResource(level, pos, stack));
+        } else {
+            drop(level, Vec3.atCenterOf(pos), drops);
+        }
     }
 
     static void drop(ServerLevel level, Vec3 position, List<ItemStack> drops) {
