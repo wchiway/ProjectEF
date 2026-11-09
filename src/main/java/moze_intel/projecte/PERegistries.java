@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -160,7 +161,11 @@ public final class PERegistries {
 
     private static Block emcMachine(String name, EmcMachineBlock.Kind kind, int tier) {
         ResourceKey<Block> key = ResourceKey.create(Registries.BLOCK, PECore.id(name));
-        Block block = new EmcMachineBlock(BlockBehaviour.Properties.of().setId(key).strength(3, 6), kind, tier);
+        var properties = BlockBehaviour.Properties.of().setId(key).strength(3, 6);
+        if (kind == EmcMachineBlock.Kind.COLLECTOR) {
+            properties.lightLevel(state -> Blocks.GLOWSTONE.defaultBlockState().getLightEmission());
+        }
+        Block block = new EmcMachineBlock(properties, kind, tier);
         return registerBlock(name, key, block, Function.identity());
     }
 

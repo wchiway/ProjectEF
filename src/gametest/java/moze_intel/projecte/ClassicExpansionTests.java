@@ -21,6 +21,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.saveddata.maps.MapId;
@@ -31,6 +32,26 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 public final class ClassicExpansionTests {
+    @GameTest
+    public void collectorsEmitGlowstoneLight(GameTestHelper helper) {
+        var level = helper.getLevel();
+        BlockPos origin = helper.absolutePos(new BlockPos(1, 7, 1));
+        int glowstoneLight = Blocks.GLOWSTONE.defaultBlockState().getLightEmission();
+        var positions = List.of(origin, origin.east(2), origin.south(2));
+        for (int tier = 1; tier <= positions.size(); tier++) {
+            BlockPos pos = positions.get(tier - 1);
+            placeMachine(helper, pos, "collector_mk" + tier);
+            helper.assertTrue(level.getBlockState(pos).getLightEmission() == glowstoneLight,
+                    "Collector Mk " + tier + " emits the same light level as glowstone");
+        }
+        helper.succeedWhen(() -> {
+            for (BlockPos pos : positions) {
+                helper.assertTrue(level.getBrightness(LightLayer.BLOCK, pos.above()) == glowstoneLight - 1,
+                        "Collector light propagates into the air above it");
+            }
+        });
+    }
+
     @GameTest(maxTicks = 50)
     public void collectorRelayCondenserChainMakesItems(GameTestHelper helper) {
         var level = helper.getLevel();
