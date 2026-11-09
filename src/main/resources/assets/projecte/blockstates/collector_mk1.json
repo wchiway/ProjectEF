@@ -1,7 +1,8 @@
 {
   "variants": {
-    "": {
-      "model": "projecte:block/collector_mk1"
-    }
+    "facing=north": { "model": "projecte:block/collector_mk1" },
+    "facing=east": { "model": "projecte:block/collector_mk1", "y": 90 },
+    "facing=south": { "model": "projecte:block/collector_mk1", "y": 180 },
+    "facing=west": { "model": "projecte:block/collector_mk1", "y": 270 }
   }
 }

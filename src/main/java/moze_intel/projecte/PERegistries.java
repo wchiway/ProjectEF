@@ -165,7 +165,9 @@ public final class PERegistries {
         if (kind == EmcMachineBlock.Kind.COLLECTOR) {
             properties.lightLevel(state -> Blocks.GLOWSTONE.defaultBlockState().getLightEmission());
         }
-        Block block = new EmcMachineBlock(properties, kind, tier);
+        Block block = kind == EmcMachineBlock.Kind.CONDENSER
+                ? new EmcMachineBlock(properties, kind, tier)
+                : new EmcMachineBlock.WithFront(properties, kind, tier);
         return registerBlock(name, key, block, Function.identity());
     }
 

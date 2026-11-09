@@ -15,8 +15,10 @@ import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CraftingRecipe;
@@ -24,6 +26,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.TntBlock;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
@@ -50,6 +53,38 @@ public final class ClassicExpansionTests {
                         "Collector light propagates into the air above it");
             }
         });
+    }
+
+    @GameTest
+    public void collectorsAndRelaysFaceThePlacingPlayer(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var player = player(helper);
+        BlockPos support = helper.absolutePos(new BlockPos(1, 6, 2));
+        level.setBlockAndUpdate(support, Blocks.STONE.defaultBlockState());
+        BlockPos pos = support.above();
+        var hit = new BlockHitResult(Vec3.atCenterOf(support).add(0, 0.5, 0), Direction.UP, support, false);
+        var facing = BlockStateProperties.HORIZONTAL_FACING;
+
+        for (String kind : List.of("collector", "relay")) {
+            for (int tier = 1; tier <= 3; tier++) {
+                String name = kind + "_mk" + tier;
+                var block = ((BlockItem) item(name).getItem()).getBlock();
+                helper.assertTrue(block.defaultBlockState().getValue(facing) == Direction.NORTH,
+                        "Existing " + name + " blocks retain the original north-facing model");
+                for (Direction looking : Direction.Plane.HORIZONTAL) {
+                    player.setYRot(looking.toYRot());
+                    ItemStack stack = item(name);
+                    player.setItemInHand(InteractionHand.MAIN_HAND, stack);
+                    var context = new BlockPlaceContext(player, InteractionHand.MAIN_HAND, stack, hit);
+                    helper.assertTrue(((BlockItem) stack.getItem()).place(context).consumesAction()
+                                    && level.getBlockState(pos).is(block)
+                                    && level.getBlockState(pos).getValue(facing) == looking.getOpposite(),
+                            name + " faces the player when placed while looking " + looking);
+                    level.removeBlock(pos, false);
+                }
+            }
+        }
+        helper.succeed();
     }
 
     @GameTest(maxTicks = 50)

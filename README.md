@@ -6,9 +6,9 @@ It is designed for **Minecraft 26.3** with **Fabric**. The goal is to make EMC u
 
 ## Current version
 
-**1.2.19-fabric.26.3**
+**1.2.20-fabric.26.3**
 
-[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.19-fabric.26.3.jar?raw=true)
+[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.20-fabric.26.3.jar?raw=true)
 
 Install Fabric Loader and Fabric API for Minecraft 26.3. Close Minecraft, remove
 any previous ProjectEF JAR, and place the downloaded JAR in `mods/`. Install the
@@ -71,6 +71,7 @@ drops.
 
 ## EMC machines and storage
 
+Energy Collectors and Antimatter Relays place their front panels toward the player.
 All three Energy Collector tiers emit light level 15, the same as glowstone.
 A collector generates EMC from the light above it and upgrades fuel in its
 input slot. Place it beside a relay or condenser to transfer EMC. A relay
