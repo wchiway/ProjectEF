@@ -233,7 +233,8 @@ public final class PERegistries {
             var type = switch(name.substring(name.indexOf('_') + 1)) { case "helmet" -> net.minecraft.world.item.equipment.ArmorType.HELMET; case "chestplate" -> net.minecraft.world.item.equipment.ArmorType.CHESTPLATE; case "leggings" -> net.minecraft.world.item.equipment.ArmorType.LEGGINGS; default -> net.minecraft.world.item.equipment.ArmorType.BOOTS; };
             var base = net.minecraft.world.item.equipment.ArmorMaterials.NETHERITE;
             var material = new net.minecraft.world.item.equipment.ArmorMaterial(1000, java.util.Map.of(net.minecraft.world.item.equipment.ArmorType.HELMET, 3, net.minecraft.world.item.equipment.ArmorType.CHESTPLATE, 8, net.minecraft.world.item.equipment.ArmorType.LEGGINGS, 6, net.minecraft.world.item.equipment.ArmorType.BOOTS, 3), 10, base.equipSound(), name.startsWith("dm_") ? 3 : 5, .1f, base.repairIngredient(), ResourceKey.create(net.minecraft.world.item.equipment.EquipmentAssets.ROOT_ID, PECore.id(name.startsWith("dm_") ? "dark_matter" : name.startsWith("rm_") ? "red_matter" : "gem_armor")));
-            item = new Item(settings.humanoidArmor(material, type).component(net.minecraft.core.component.DataComponents.UNBREAKABLE, net.minecraft.util.Unit.INSTANCE));
+            settings.humanoidArmor(material, type).component(net.minecraft.core.component.DataComponents.UNBREAKABLE, net.minecraft.util.Unit.INSTANCE);
+            item = name.startsWith("gem_") ? new Item(settings) : new MatterArmorItem(settings, name.startsWith("rm_"));
         } else item = new Item(settings);
         Registry.register(BuiltInRegistries.ITEM, key, item);
         ITEMS.put(name, item);

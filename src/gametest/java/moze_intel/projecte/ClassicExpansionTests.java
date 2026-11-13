@@ -13,6 +13,10 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.CombatRules;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.item.BlockItem;
@@ -35,6 +39,64 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 public final class ClassicExpansionTests {
+    @GameTest
+    public void matterArmorAddsClassicProtectionToVanillaDamage(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var dark = helper.spawn(EntityTypes.HUSK, new BlockPos(1, 2, 1));
+        var red = helper.spawn(EntityTypes.HUSK, new BlockPos(2, 2, 1));
+        for (var wearer : List.of(dark, red)) {
+            String tier = wearer == red ? "rm_" : "dm_";
+            wearer.setItemSlot(EquipmentSlot.HEAD, item(tier + "helmet"));
+            wearer.setItemSlot(EquipmentSlot.CHEST, item(tier + "chestplate"));
+            wearer.setItemSlot(EquipmentSlot.LEGS, item(tier + "leggings"));
+            wearer.setItemSlot(EquipmentSlot.FEET, item(tier + "boots"));
+        }
+
+        helper.runAfterDelay(2, () -> {
+            var cactus = level.damageSources().cactus();
+            float damage = 120;
+            for (var wearer : List.of(dark, red)) {
+                float vanilla = CombatRules.getDamageAfterAbsorb(wearer, damage, cactus, wearer.getArmorValue(),
+                        (float) wearer.getAttributeValue(Attributes.ARMOR_TOUGHNESS));
+                float fraction = wearer == red ? 0.9F : 0.8F;
+                float expected = Math.max(0, vanilla - damage * fraction);
+                float health = wearer.getHealth();
+                wearer.hurtServer(level, cactus, damage);
+                helper.assertTrue(Math.abs(health - wearer.getHealth() - expected) < 0.001F,
+                        "Expected health loss " + expected + ", got " + (health - wearer.getHealth()));
+            }
+            helper.assertTrue(red.getHealth() > dark.getHealth(),
+                    "Red Matter blocks more damage from the same heavy hit");
+            helper.succeed();
+        });
+    }
+
+    @GameTest
+    public void matterArmorSpecialProtectionUsesTheEquippedPieces(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var wearer = helper.spawn(EntityTypes.HUSK, new BlockPos(1, 2, 1));
+        wearer.setItemSlot(EquipmentSlot.HEAD, item("dm_helmet"));
+        wearer.setItemSlot(EquipmentSlot.FEET, item("rm_boots"));
+        var source = level.damageSources();
+
+        helper.assertTrue(Math.abs(MatterArmorItem.absorb(wearer, source.cactus(), 10, 10) - 6.6F) < 0.001F,
+                "Mixed Dark and Red Matter pieces contribute 16 and 18 percent");
+        helper.assertTrue(MatterArmorItem.absorb(wearer, source.cactus(), 1_000, 1_000) == 930,
+                "The helmet and boots cap combined ordinary absorption at 70 damage");
+        helper.assertTrue(MatterArmorItem.absorb(wearer, source.explosion(null, null), 1_000, 1_000) == 830,
+                "Explosion damage uses the higher combined cap of 170");
+        helper.assertTrue(MatterArmorItem.absorb(wearer, source.fall(), 100, 100) == 90
+                        && MatterArmorItem.absorb(wearer, source.drown(), 100, 100) == 95,
+                "Only the boots reduce falling damage and only the helmet reduces drowning damage");
+        helper.assertTrue(MatterArmorItem.absorb(wearer, source.genericKill(), 100, 100) == 100,
+                "Damage that bypasses invulnerability is unaffected");
+
+        wearer.hurtServer(level, source.fall(), 10);
+        helper.assertTrue(Math.abs(wearer.getHealth() - 11.8F) < 0.001F,
+                "Expected 11.8 health after fall damage, got " + wearer.getHealth());
+        helper.succeed();
+    }
+
     @GameTest
     public void collectorsEmitGlowstoneLight(GameTestHelper helper) {
         var level = helper.getLevel();

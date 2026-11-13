@@ -9,7 +9,8 @@
     "HarvestFarmlandMixin",
     "NovaChargeMixin",
     "NovaDetonationMixin",
-    "KleinStarRecipesMixin"
+    "KleinStarRecipesMixin",
+    "MatterArmorDamageMixin"
   ],
   "injectors": {
     "defaultRequire": 1
