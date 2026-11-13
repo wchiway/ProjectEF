@@ -234,7 +234,12 @@ public final class PERegistries {
             var base = net.minecraft.world.item.equipment.ArmorMaterials.NETHERITE;
             var material = new net.minecraft.world.item.equipment.ArmorMaterial(1000, java.util.Map.of(net.minecraft.world.item.equipment.ArmorType.HELMET, 3, net.minecraft.world.item.equipment.ArmorType.CHESTPLATE, 8, net.minecraft.world.item.equipment.ArmorType.LEGGINGS, 6, net.minecraft.world.item.equipment.ArmorType.BOOTS, 3), 10, base.equipSound(), name.startsWith("dm_") ? 3 : 5, .1f, base.repairIngredient(), ResourceKey.create(net.minecraft.world.item.equipment.EquipmentAssets.ROOT_ID, PECore.id(name.startsWith("dm_") ? "dark_matter" : name.startsWith("rm_") ? "red_matter" : "gem_armor")));
             settings.humanoidArmor(material, type).component(net.minecraft.core.component.DataComponents.UNBREAKABLE, net.minecraft.util.Unit.INSTANCE);
-            item = name.startsWith("gem_") ? new Item(settings) : new MatterArmorItem(settings, name.startsWith("rm_"));
+            var tier = switch (name.substring(0, name.indexOf('_'))) {
+                case "dm" -> MatterArmorItem.Tier.DARK;
+                case "rm" -> MatterArmorItem.Tier.RED;
+                default -> MatterArmorItem.Tier.GEM;
+            };
+            item = new MatterArmorItem(settings, tier);
         } else item = new Item(settings);
         Registry.register(BuiltInRegistries.ITEM, key, item);
         ITEMS.put(name, item);

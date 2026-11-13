@@ -8,11 +8,31 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 
 public final class MatterArmorItem extends Item {
-    private final boolean redMatter;
+    enum Tier {
+        DARK(0.8F, 100, 150, 350, 5),
+        RED(0.9F, 250, 350, 500, 10),
+        GEM(0.9F, 400, 500, 750, 15);
 
-    MatterArmorItem(Properties properties, boolean redMatter) {
+        final float absorption;
+        final int helmetAndBootsCap;
+        final int chestAndLegsCap;
+        final int explosionCap;
+        final int fallAndDrowningCap;
+
+        Tier(float absorption, int helmetAndBootsCap, int chestAndLegsCap, int explosionCap, int fallAndDrowningCap) {
+            this.absorption = absorption;
+            this.helmetAndBootsCap = helmetAndBootsCap;
+            this.chestAndLegsCap = chestAndLegsCap;
+            this.explosionCap = explosionCap;
+            this.fallAndDrowningCap = fallAndDrowningCap;
+        }
+    }
+
+    private final Tier tier;
+
+    MatterArmorItem(Properties properties, Tier tier) {
         super(properties);
-        this.redMatter = redMatter;
+        this.tier = tier;
     }
 
     // ProjectE's armor bonus adds to vanilla absorption, capped by the pieces being worn.
@@ -32,21 +52,20 @@ public final class MatterArmorItem extends Item {
 
             float pieceLimit = piece.absorptionLimit(slot, source, weight);
             if (pieceLimit <= 0) continue;
-            fraction += (piece.redMatter ? 0.9F : 0.8F) * weight;
+            fraction += piece.tier.absorption * weight;
             limit += pieceLimit;
         }
         return Math.max(0, remaining - Math.min(incoming * fraction, limit));
     }
 
     private float absorptionLimit(EquipmentSlot slot, DamageSource source, float weight) {
-        if (source.is(DamageTypeTags.IS_EXPLOSION)) return (redMatter ? 500 : 350) * weight;
+        if (source.is(DamageTypeTags.IS_EXPLOSION)) return tier.explosionCap * weight;
         if ((slot == EquipmentSlot.FEET && source.is(DamageTypeTags.IS_FALL))
                 || (slot == EquipmentSlot.HEAD && source.is(DamageTypeTags.IS_DROWNING))) {
-            return redMatter ? 10 : 5;
+            return tier.fallAndDrowningCap;
         }
         if (source.is(DamageTypeTags.BYPASSES_ARMOR)) return 0;
         boolean headOrFeet = slot == EquipmentSlot.HEAD || slot == EquipmentSlot.FEET;
-        int cap = redMatter ? (headOrFeet ? 250 : 350) : (headOrFeet ? 100 : 150);
-        return cap * weight;
+        return (headOrFeet ? tier.helmetAndBootsCap : tier.chestAndLegsCap) * weight;
     }
 }

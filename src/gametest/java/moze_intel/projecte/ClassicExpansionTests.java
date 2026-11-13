@@ -98,6 +98,38 @@ public final class ClassicExpansionTests {
     }
 
     @GameTest
+    public void gemArmorAbsorbsHitsBeyondRedMatterLimits(GameTestHelper helper) {
+        var level = helper.getLevel();
+        var red = helper.spawn(EntityTypes.HUSK, new BlockPos(1, 2, 1));
+        var gem = helper.spawn(EntityTypes.HUSK, new BlockPos(2, 2, 1));
+        for (var wearer : List.of(red, gem)) {
+            String prefix = wearer == gem ? "gem_" : "rm_";
+            wearer.setItemSlot(EquipmentSlot.HEAD, item(prefix + "helmet"));
+            wearer.setItemSlot(EquipmentSlot.CHEST, item(prefix + "chestplate"));
+            wearer.setItemSlot(EquipmentSlot.LEGS, item(prefix + "leggings"));
+            wearer.setItemSlot(EquipmentSlot.FEET, item(prefix + "boots"));
+        }
+        var damage = level.damageSources();
+        helper.assertTrue(Math.abs(MatterArmorItem.absorb(gem, damage.cactus(), 100, 100) - 10) < 0.001F,
+                "The full Gem set absorbs 90 percent before reaching its cap");
+        helper.assertTrue(MatterArmorItem.absorb(gem, damage.cactus(), 1_000, 1_000) == 540,
+                "Gem Armor absorbs up to 460 damage from ordinary hits");
+        helper.assertTrue(MatterArmorItem.absorb(gem, damage.explosion(null, null), 1_000, 1_000) == 250,
+                "Gem Armor absorbs up to 750 damage from explosions");
+        helper.assertTrue(MatterArmorItem.absorb(gem, damage.drown(), 100, 100) == 85,
+                "The Gem helmet can absorb up to 15 drowning damage");
+
+        helper.runAfterDelay(2, () -> {
+            float gemHealth = gem.getHealth();
+            gem.hurtServer(level, damage.cactus(), 400);
+            red.hurtServer(level, damage.cactus(), 400);
+            helper.assertTrue(gem.getHealth() == gemHealth && red.getHealth() < gemHealth,
+                    "Gem Armor fully absorbs a hit that penetrates Red Matter");
+            helper.succeed();
+        });
+    }
+
+    @GameTest
     public void collectorsEmitGlowstoneLight(GameTestHelper helper) {
         var level = helper.getLevel();
         BlockPos origin = helper.absolutePos(new BlockPos(1, 7, 1));

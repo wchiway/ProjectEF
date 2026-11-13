@@ -6,9 +6,9 @@ It is designed for **Minecraft 26.3** with **Fabric**. The goal is to make EMC u
 
 ## Current version
 
-**1.2.21-fabric.26.3**
+**1.2.22-fabric.26.3**
 
-[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.21-fabric.26.3.jar?raw=true)
+[Download the current Minecraft 26.3 JAR](downloads/projecte-fabric-26.3-1.2.22-fabric.26.3.jar?raw=true)
 
 Install Fabric Loader and Fabric API for Minecraft 26.3. Close Minecraft, remove
 any previous ProjectEF JAR, and place the downloaded JAR in `mods/`. Install the
@@ -99,11 +99,11 @@ for your player. With both hands empty, press **V** to arm Gem Armor attacks,
 
 ## Matter armor
 
-Dark Matter and Red Matter armor add classic per-piece damage absorption
+Dark Matter, Red Matter, and Gem Armor add classic per-piece damage absorption
 alongside vanilla armor. A full Dark Matter set can absorb an extra 80% of an
-eligible incoming hit, and Red Matter can absorb an extra 90%, up to their
-damage limits. Pieces from both tiers can be mixed. Boots also protect against
-falls and helmets protect against drowning.
+eligible incoming hit. Red Matter and Gem Armor can absorb an extra 90%, with
+higher absorption limits for Gem Armor. Pieces from all three tiers can be mixed.
+Boots also protect against falls and helmets protect against drowning.
 
 ## EMC shop
 
